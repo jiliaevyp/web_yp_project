@@ -1,0 +1,16 @@
+{{ define "content" }}
+<strong>
+    <table border="1" style="background-color: #b1f3d8">
+        <caption><h3>Данные по сотруднику</h3></caption><br>
+        <thead>
+        <th> №</th><th>Наименование</th><th>Значение</th>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table><br>
+</strong>
+<button class="button"> <a href= "/mond_edit?monat={{ .Monat}}" >Изменить</a></button>
+<button class="button"> <a href= "/mond_index" >Выход</a></button>
+
+{{end}}

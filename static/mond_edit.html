@@ -1,0 +1,47 @@
+{{ define "content" }}
+    {{ if eq .Ready "1"}}
+    <strong>
+        <table border="1" style="background-color: #b1f3d8">
+            <caption><h3>Текущий месяц   {{.Nummonat}}  {{.Monat}}  {{.Yahre}}</h3></caption><br>
+            <tbody>
+            <tr><td>1</td><td>Рабочих дней</td>      <td align="center"> {{.Tag}}     </td></tr>
+            <tr><td>2</td><td>Рабочих часов</td>     <td align="center"> {{.Hour}}    </td></tr>
+            <tr><td>3</td><td>Коэф. сверхурочных</td><td align="center"> {{.Kf}}</td></tr>
+            <tr><td>4</td><td>Налог %</td>           <td align="center"> {{.Nalog}}   </td></tr>
+            <tr><td>5</td><td>Социальный налог %</td><td align="center"> {{.Social}}  </td></tr>
+            </tbody>
+        </table><br>
+        <button class="button"> <a href= "/mond_edit?monat={{.Monat}}" >Изменить</a></button>
+    </strong>
+    {{else}}
+        {{ if eq .Empty "1" }}
+            <strong>Заполните все поля! </strong><br>
+        {{else}}
+            {{ if eq .Errors "1" }}
+            <strong>Ввведите числовые значения! </strong><br>
+        {{end}}
+        {{ if eq .Range "1" }}
+            <strong>Введите числовые значения в рабочем диапазоне! </strong><br>
+        {{end}}
+    {{end}} </strong>
+    <form method="POST">
+        <strong>
+            <table border="1" style="background-color: #b1f3d8">
+                <caption><h3>Заполните значения по месяцу</h3></caption><br>
+                <tbody>
+                <tr><td>1</td><td>Год</td><td align="center">               <input name="yahre"></td></tr>
+                <tr><td>2</td><td>Месяц</td><td align="center">             <input name="monat"></td></tr>
+                <tr><td>2</td><td>Номер месяца</td><td align="center">      <input name="nummonat"></td></tr>
+                <tr><td>3</td><td>Рабочих дней</td><td align="center">      <input name="tag"></td></tr>
+                <tr><td>4</td><td>Рабочих часов</td><td align="center">     <input name="hour"></td></tr>
+                <tr><td>5</td><td>Коэф.сверхурочных</td><td align="center"> <input name="kf"></td></tr>
+                <tr><td>6</td><td>Налог %</td><td align="center">           <input name="nalog"></td></tr>
+                <tr><td>7</td><td>Соц.налог %</td><td align="center"><input name="social"></td></tr>
+                </tbody>
+            </table><br>
+            <button class="button"><input type="submit" value="Ввести"></button>
+        </strong>
+</form>
+{{end}}
+<button class="button"> <a href= "/mond_index" >Выход</a></button>
+{{end}}

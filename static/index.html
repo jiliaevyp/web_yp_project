@@ -1,0 +1,40 @@
+{{define "content" }}
+    {{ if eq .Ready "1"}}
+    <strong>
+    <table border="1" style="background-color: #b1f3d8">
+        <h2><div class="caption">Пользователь</div></h2>
+        <tbody>
+        <tr><td>1</td><td>Имя</td><td align="center">   {{.User}}</td></tr>
+        <tr><td>2</td><td>Логин</td><td align="center"> {{.Email}}</td></tr>
+        </tbody>
+    </table><br>
+    </strong>
+    {{else}}
+        {{ if eq .Errors "1"}}
+            {{ if eq .Empty "1" }}
+            Заполните все поля! <br>
+            {{else}}
+                {{ if eq .ErrEmail "1" }}
+                Ошибка при вводе логина <br>
+                {{else}}
+                    {{ if eq .Passpass "1" }}
+                    Неправильный пароль </strong><br>
+                    {{end}}
+                {{end}}
+            {{end}}
+        {{end}}
+        <form method="POST">
+            <strong>
+                <table border="1" style="background-color: #b1f3d8">
+                    <h2><div class="caption">Идентификация</div></h2>
+                    <tbody>
+                    <tr><td>1</td><td>Имя</td><td align="center">   <input name="user"></td></tr>
+                    <tr><td>2</td><td>Логин</td><td align="center"> <input name="email"></td></tr>
+                    <tr><td>3</td><td>Пароль</td><td align="center"><input name="passw"></td></tr>
+                    </tbody>
+                </table><br>
+                <button class="button"><input type="submit" value="Ввести"></button>
+            </strong>
+        </form>
+    {{end}}
+{{end}}

@@ -1,0 +1,38 @@
+{{define "content" }}
+<strong>
+    <table border="1" style="background-color: #b1f3d8">
+        <caption>
+            <h3>Календарь<br>
+            </h3>
+        </caption>
+        <thead>
+        <tr>
+            <th align="center">№</th>
+            <th align="center">Год</th>
+            <th align="center">Месяц</th>
+            <th align="center">Номер месяца</th>
+            <th align="center">Рабочих дней</th>
+            <th align="center">Рабочих часо </th>
+            <th align="center">Коэф.сверхурочных</th>
+            <th align="center">Налог (%)</th>
+            <th align="center">Удалить</th>
+        </thead>
+        <tbody>
+        {{range $key, $value := .Mondstab}}
+        <tr class="<%= cycle('list_line_odd', 'list_line_even') %>">
+            <td>{{ 1}}</td>
+            <td>{{ .Yahre}}</td>
+            <td>{{ .Monat}}</td>
+            <td>{{ .Nummonat}}</td>
+            <td>{{ .Tag}}</td>
+            <td>{{ .Hour}}</td>
+            <td>{{ .Kf}}</td>
+            <td>{{ .Nalog}}</td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table><br>
+    <button class="button"> <a href= "/mond_new" >Новый месяц</a></button>
+    <button class="button"> <a href= "/index" >Выход</a></button>
+</strong>
+{{end}}

@@ -1,0 +1,63 @@
+{{ define "content" }}
+{{ if eq .Ready "1"}}
+<strong>
+    <table border="1" style="background-color: #b1f3d8">
+        <caption><h3>Данные по сотруднику</h3></caption><br>
+        <thead>
+        <th> №</th><th>Наименование</th><th>Значение</th>
+        </thead>
+        <tbody>
+        <tr><td>1</td><td>Имя</td>       <td align="center"> {{.Name}}   </td></tr>
+        <tr><td>2</td><td>Фамилия</td>   <td align="center"> {{.Title}}  </td></tr>
+        <tr><td>3</td><td>Должность</td> <td align="center"> {{.Kadr}}   </td></tr>
+        <tr><td>3</td><td>Тариф</td>     <td align="center"> {{.Tarif}}   </td></tr>
+        <tr><td>4</td><td>Отдел</td>     <td align="center"> {{.Otdel}}  </td></tr>
+        <tr><td>5</td><td>Е-майл</td>    <td align="center"> {{.Email}}  </td></tr>
+        <tr><td>6</td><td>Телефон</td>   <td align="center"> {{.Phone}}  </td></tr>
+        <tr><td>7</td><td>Адрес</td>     <td align="center"> {{.Address}}</td></tr>
+        </tbody>
+    </table><br>
+    <button class="button"> <a href= "/personal/personal_edit?title={{.Title}}" >Изменить</a></button>
+</strong>
+
+{{else}}
+{{ if eq .Empty "1" }}
+<strong>Заполните все поля! <br>
+    {{else}}
+    {{ if eq .Errors "1"}}
+    Ошибки при вводе данных! <br>
+    {{ if eq .ErrEmail "1" }}
+    Электронная почта некорректна! <br>
+    {{end}}
+    {{ if eq .ErrPhone "1" }}
+    Телефонный номер некорректен! <br>
+    {{end}}
+    {{ if eq .ErrRange "1" }}
+    Тариф некорректен! <br>
+    {{end}}
+    {{end}}
+    {{end}} </strong>
+<form method="POST">
+    <strong>
+        <table border="1" style="background-color: #b1f3d8">
+            <caption><h3>Введите данные по сотруднику</h3></caption><br>
+            <thead>
+            <th> №</th><th>Наименование</th><th>Значение</th>
+            </thead>
+            <tbody>
+            <tr><td>1</td><td>Имя</td>       <td align="center"><input value= {{.Name}}     name="name"></td></tr>
+            <tr><td>2</td><td>Фамилия</td>   <td align="center"><input value= {{.Title}}    name="title"></td></tr>
+            <tr><td>3</td><td>Должность</td> <td align="center"><input value= {{.Kadr}}     name="kadr"></td></tr>
+            <tr><td>3</td><td>Тариф</td>     <td align="center"><input value= {{.Tarif}}    name="tarif"></td></tr>
+            <tr><td>4</td><td>Отдел</td>     <td align="center"><input value= {{.Otdel}}    name="otdel"></td></tr>
+            <tr><td>5</td><td>Е-майл</td>    <td align="center"><input value= {{.Email}}    name="email"></td></tr>
+            <tr><td>6</td><td>Телефон</td>   <td align="center"><input value= {{.Phone}}    name="phone"></td></tr>
+            <tr><td>7</td><td>Адрес</td>     <td align="center"><input value= {{.Address}}  name="address"></td></tr>
+            </tbody>
+        </table><br>
+        <button class="submit" align="center"><input type="submit" align="center" value="Изменить"></button>
+    </strong>
+</form>
+{{end}}
+<button class="button"> <a href= "/personals_index" >Выход</a></button>
+{{end}}

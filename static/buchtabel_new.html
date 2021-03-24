@@ -1,0 +1,42 @@
+{{ define "content" }}
+{{ if eq .Ready "1"}}
+<strong>
+    <table border="1" style="background-color: #b1f3d8">
+        <caption><h3>Данные по сотруднику</h3></caption><br>
+        <thead>
+        <th> №</th><th>Наименование</th><th>Значение</th>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table><br>
+    <button class="button"> <a href= "/buchtabel_edit?title={{.Title}}" >Изменить</a></button>
+</strong>
+{{else}}
+{{ if eq .Empty "1" }}
+<strong>Заполните все поля! <br>
+    {{else}}
+        {{ if eq .Errors "1"}}
+            Ошибки при вводе данных! <br>
+            {{ if eq .ErrRange "1" }}
+            Тариф некорректен! <br>
+            {{end}}
+        {{end}}
+    {{end}} </strong>
+<form method="POST">
+    <strong>
+        <table border="1" style="background-color: #b1f3d8">
+            <caption><h3>Введите данные по сотруднику</h3></caption><br>
+            <thead>
+            <th> №</th><th>Наименование</th><th>Значение</th>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table><br>
+        <button class="submit" align="center"><input type="submit" align="center" value="Ввести"></button>
+    </strong>
+</form>
+{{end}}
+<button class="button"> <a href= "/buchtabel_index" >Выход</a></button>
+{{end}}

@@ -1,0 +1,23 @@
+{{ define "content" }}
+<strong>
+    <table border="1" style="background-color: #b1f3d8">
+        <caption><h3>Данные по сотруднику</h3></caption><br>
+        <thead>
+        <th> №</th><th>Наименование</th><th>Значение</th>
+        </thead>
+        <tbody>
+        <tr><td>1</td><td>Имя</td>       <td align="center"> {{.Name}}   </td></tr>
+        <tr><td>2</td><td>Фамилия</td>   <td align="center"> {{.Title}}  </td></tr>
+        <tr><td>3</td><td>Должность</td> <td align="center"> {{.Kadr}}   </td></tr>
+        <tr><td>3</td><td>Тариф</td>     <td align="center"> {{.Tarif}}   </td></tr>
+        <tr><td>4</td><td>Отдел</td>     <td align="center"> {{.Otdel}}  </td></tr>
+        <tr><td>5</td><td>Е-майл</td>    <td align="center"> {{.Email}}  </td></tr>
+        <tr><td>6</td><td>Телефон</td>   <td align="center"> {{.Phone}}  </td></tr>
+        <tr><td>7</td><td>Адрес</td>     <td align="center"> {{.Address}}</td></tr>
+        </tbody>
+    </table><br>
+</strong>
+<button class="button"> <a href= "/personal_edit?title={{ .Title}}" >Изменить</a></button>
+<button class="button"> <a href= "/personals_index" >Выход</a></button>
+
+{{end}}
