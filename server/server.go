@@ -9,8 +9,6 @@ import (
 	"log"
 	"net/http"
 	"net/mail"
-	//"github.com/jackc/pgx"
-	//"github.com/jmoiron/sqlx"
 )
 
 const (
