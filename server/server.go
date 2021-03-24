@@ -8,7 +8,8 @@ import (
 	"net/http"
 	"net/mail"
 	"strconv"
-	_ "strconv"
+
+	"github.com/jiliaevyp/web_yp_project/personals"
 	//"github.com/jackc/pgx"
 	//"github.com/jmoiron/sqlx"
 )
