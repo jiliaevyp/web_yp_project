@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	_ "github.com/jiliaevyp/web_yp_project/server"
+	"github.com/jiliaevyp/web_yp_project/server"
 	_ "github.com/lib/pq"
 	"net"
 	"os"
@@ -159,7 +159,7 @@ func main() {
 		fmt.Println("Отменить?  (Enter)")
 		yes = yesNo() //yesNo()
 		if yes == 1 {
-			go server(addrWeb, db)
+			go server.Server(addrWeb, db)
 			if errserv != 0 {
 				fmt.Print("*** Ошибка при загрузке сервера ***", "\n", "\n")
 			} else {

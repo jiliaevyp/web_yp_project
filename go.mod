@@ -3,7 +3,7 @@ module github.com/jiliaevyp/web_yp_project
 go 1.15
 
 require (
-	github.com/golang/protobuf v1.4.3
+	github.com/golang/protobuf v1.4.3 // indirect
 	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/jmoiron/sqlx v1.3.1
 	github.com/lib/pq v1.10.0

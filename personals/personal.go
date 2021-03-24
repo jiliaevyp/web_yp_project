@@ -10,11 +10,22 @@ import (
 	_ "go/parser"
 	"html/template"
 	"log"
+	"net/mail"
 	//"net"
-	"github.com/jiliaevyp/web_yp_project/server"
 	"net/http"
 	"strconv"
 )
+
+var partials = []string{
+	"./static/mond_new.html",
+	"./static/mond_show.html",
+	"./static/mond_edit.html",
+	"./static/mond_index.html",
+	"./static/personal_new.html",
+	"./static/personal_show.html",
+	"./static/personal_edit.html",
+	"./static/personals_index.html",
+}
 
 type person struct { // данные по сотруднику при вводе и отображении в personal.HTML
 	Name      string
@@ -55,6 +66,29 @@ var (
 		Persontable []person //person // таблица по сотрудниам  в personals_index.html
 	}
 )
+
+// проверка корректности емайл адреса nameAddress --> "имя <email@mail.com>
+func inpMailAddress(nameAddress string) (err int, email string, title string) {
+	e, err1 := mail.ParseAddress(nameAddress)
+	if err1 != nil {
+		return 1, e.Address, e.Name //"?", "?"
+	}
+	return 0, e.Address, e.Name
+}
+
+// валидация  числовых вводов и диапазонов
+func checknum(checknum string, min int, max int) int {
+	num, err := strconv.Atoi(checknum)
+	if err != nil {
+		return 1
+	} else {
+		if num >= min && num <= max {
+			return 0
+		} else {
+			return 1
+		}
+	}
+}
 
 // подготовка  значений для web
 func makeReadyHtml(p *person) {

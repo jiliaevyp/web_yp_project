@@ -2,13 +2,19 @@ package mond
 
 import (
 	"database/sql"
+	_ "errors"
 	"fmt"
-	//"github.com/golang/protobuf/ptypes/timestamp"
-	"html/template"
 	"log"
 	"net/http"
 	"strconv"
 )
+
+var partials = []string{
+	"./static/mond_new.html",
+	"./static/mond_show.html",
+	"./static/mond_edit.html",
+	"./static/mond_index.html",
+}
 
 type monatHtml struct { // данные по месяцу при вводе и отображении в mond.HTML
 	Id             string
@@ -62,6 +68,20 @@ type monattab struct { // данные по месяцу при отображе
 var mondtable struct {
 	Ready    string     // флаг готовности
 	Mondstab []monattab // таблица по сотрудниам  в monds_index.html
+}
+
+// валидация  числовых вводов и диапазонов
+func checknum(checknum string, min int, max int) int {
+	num, err := strconv.Atoi(checknum)
+	if err != nil {
+		return 1
+	} else {
+		if num >= min && num <= max {
+			return 0
+		} else {
+			return 1
+		}
+	}
 }
 
 func mondIndexHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {

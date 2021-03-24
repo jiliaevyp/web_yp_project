@@ -3,13 +3,12 @@ package server
 import (
 	"database/sql"
 	"fmt"
+	"github.com/jiliaevyp/web_yp_project/mond"
+	"github.com/jiliaevyp/web_yp_project/personals"
 	"html/template"
 	"log"
 	"net/http"
 	"net/mail"
-	"strconv"
-
-	"github.com/jiliaevyp/web_yp_project/personals"
 	//"github.com/jackc/pgx"
 	//"github.com/jmoiron/sqlx"
 )
@@ -59,12 +58,6 @@ var admin struct { // администратор
 	Empty    string // "1" - остались пустые поля
 }
 
-func CheckError(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 // проверка корректности емайл адреса nameAddress --> "имя <email@mail.com>
 func inpMailAddress(nameAddress string) (err int, email string, title string) {
 	e, err1 := mail.ParseAddress(nameAddress)
@@ -74,47 +67,33 @@ func inpMailAddress(nameAddress string) (err int, email string, title string) {
 	return 0, e.Address, e.Name
 }
 
-// валидация  числовых вводов и диапазонов
-func checknum(checknum string, min int, max int) int {
-	num, err := strconv.Atoi(checknum)
-	if err != nil {
-		return 1
-	} else {
-		if num >= min && num <= max {
-			return 0
-		} else {
-			return 1
-		}
-	}
-}
-
 func server(addrWeb string, db *sql.DB) {
 	http.HandleFunc("/", indexHandler)
 
-	http.Handle("/mond_index", http.HandlerFunc(mondIndexHandler(db)))
-	http.Handle("/mond_new", http.HandlerFunc(mondNewHandler(db)))
-	http.Handle("/mond_show", http.HandlerFunc(mondShowHandler(db)))
-	http.Handle("/mond_edit", http.HandlerFunc(mondEditHandler(db)))
+	http.Handle("/mond_index", http.HandlerFunc(mond.MondIndexHandler(db)))
+	http.Handle("/mond_new", http.HandlerFunc(mond.MondNewHandler(db)))
+	http.Handle("/mond_show", http.HandlerFunc(mond.MondShowHandler(db)))
+	http.Handle("/mond_edit", http.HandlerFunc(mond.MondEditHandler(db)))
 
-	http.Handle("/personals_index", http.HandlerFunc(personalsIndexHandler(db)))
-	http.Handle("/personal_new", http.HandlerFunc(personalNewhandler(db)))
-	http.Handle("/personal_show", http.HandlerFunc(personalShowhandler(db)))
-	http.Handle("/personal_edit", http.HandlerFunc(personalEdithandler(db)))
+	http.Handle("/personals_index", http.HandlerFunc(personals.PersonalsIndexHandler(db)))
+	http.Handle("/personal_new", http.HandlerFunc(personals.personalNewhandler(db)))
+	http.Handle("/personal_show", http.HandlerFunc(personals.personalShowhandler(db)))
+	http.Handle("/personal_edit", http.HandlerFunc(personals.personalEdithandler(db)))
 
-	http.Handle("/worktime_index", http.HandlerFunc(worktimeIndexHandler(db)))
-	http.Handle("/worktime_new", http.HandlerFunc(worktimeNewHandler(db)))
-	http.Handle("/worktime_show", http.HandlerFunc(worktimeShowHandler(db)))
-	http.Handle("/worktime_edit", http.HandlerFunc(worktimeEditHandler(db)))
-
-	http.Handle("/tabel_index", http.HandlerFunc(tabelIndexHandler(db)))
-	http.Handle("/tabel_new", http.HandlerFunc(tabelNewHandler(db)))
-	http.Handle("/tabel_show", http.HandlerFunc(tabelShowHandler(db)))
-	http.Handle("/tabel_edit", http.HandlerFunc(tabelEditHandler(db)))
-
-	http.Handle("/buchtabel_index", http.HandlerFunc(buchtabelIndexHandler(db)))
-	http.Handle("/buchtabel_new", http.HandlerFunc(buchtabelNewHandler(db)))
-	http.Handle("/buchtabel_show", http.HandlerFunc(buchtabelShowHandler(db)))
-	http.Handle("/buchtabel_edit", http.HandlerFunc(buchtabelEditHandler(db)))
+	//http.Handle("/worktime_index", http.HandlerFunc(worktimeIndexHandler(db)))
+	//http.Handle("/worktime_new", http.HandlerFunc(worktimeNewHandler(db)))
+	//http.Handle("/worktime_show", http.HandlerFunc(worktimeShowHandler(db)))
+	//http.Handle("/worktime_edit", http.HandlerFunc(worktimeEditHandler(db)))
+	//
+	//http.Handle("/tabel_index", http.HandlerFunc(tabelIndexHandler(db)))
+	//http.Handle("/tabel_new", http.HandlerFunc(tabelNewHandler(db)))
+	//http.Handle("/tabel_show", http.HandlerFunc(tabelShowHandler(db)))
+	//http.Handle("/tabel_edit", http.HandlerFunc(tabelEditHandler(db)))
+	//
+	//http.Handle("/buchtabel_index", http.HandlerFunc(buchtabelIndexHandler(db)))
+	//http.Handle("/buchtabel_new", http.HandlerFunc(buchtabelNewHandler(db)))
+	//http.Handle("/buchtabel_show", http.HandlerFunc(buchtabelShowHandler(db)))
+	//http.Handle("/buchtabel_edit", http.HandlerFunc(buchtabelEditHandler(db)))
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	fmt.Println("Топай на web страницу--->" + addrWeb + "!") // отладочная печать
