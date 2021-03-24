@@ -21,14 +21,6 @@ var jetzYahre, jetzMonat string
 
 var partials = []string{
 	"./static/base.html",
-	"./static/mond_new.html",
-	"./static/mond_show.html",
-	"./static/mond_edit.html",
-	"./static/mond_index.html",
-	"./static/personal_new.html",
-	"./static/personal_show.html",
-	"./static/personal_edit.html",
-	"./static/personals_index.html",
 	"./static/worktime_new.html",
 	"./static/worktime_show.html",
 	"./static/worktime_edit.html",
@@ -74,9 +66,9 @@ func server(addrWeb string, db *sql.DB) {
 	http.Handle("/mond_edit", http.HandlerFunc(mond.MondEditHandler(db)))
 
 	http.Handle("/personals_index", http.HandlerFunc(personals.PersonalsIndexHandler(db)))
-	http.Handle("/personal_new", http.HandlerFunc(personals.personalNewhandler(db)))
-	http.Handle("/personal_show", http.HandlerFunc(personals.personalShowhandler(db)))
-	http.Handle("/personal_edit", http.HandlerFunc(personals.personalEdithandler(db)))
+	http.Handle("/personal_new", http.HandlerFunc(personals.PersonalNewhandler(db)))
+	http.Handle("/personal_show", http.HandlerFunc(personals.PersonalShowhandler(db)))
+	http.Handle("/personal_edit", http.HandlerFunc(personals.PersonalEdithandler(db)))
 
 	//http.Handle("/worktime_index", http.HandlerFunc(worktimeIndexHandler(db)))
 	//http.Handle("/worktime_new", http.HandlerFunc(worktimeNewHandler(db)))
@@ -96,10 +88,11 @@ func server(addrWeb string, db *sql.DB) {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	fmt.Println("Топай на web страницу--->" + addrWeb + "!") // отладочная печать
 	err := http.ListenAndServe(addrWeb, nil)
+	var _erserv int
 	if err != nil {
-		errserv = 1
+		_erserv = 1
 	} else {
-		errserv = 0
+		_erserv = 0
 	} // запуск сервера
 	return
 	//errserv := 0                                              // адрес в --> addrWeb
