@@ -160,7 +160,7 @@ func main() {
 		yes = yesNo() //yesNo()
 		if yes == 1 {
 			go server.Server(addrWeb, db)
-			if errserv != 0 {
+			if server.Erserv != 0 {
 				fmt.Print("*** Ошибка при загрузке сервера ***", "\n", "\n")
 			} else {
 				fmt.Println("---------------------------")

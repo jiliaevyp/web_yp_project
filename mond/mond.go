@@ -11,10 +11,30 @@ import (
 )
 
 var partials = []string{
+	"./static/base.html",
 	"./static/mond_new.html",
 	"./static/mond_show.html",
 	"./static/mond_edit.html",
 	"./static/mond_index.html",
+	"./static/personal_new.html",
+	"./static/personal_show.html",
+	"./static/personal_edit.html",
+	"./static/personals_index.html",
+	"./static/worktime_new.html",
+	"./static/worktime_show.html",
+	"./static/worktime_edit.html",
+	"./static/worktime_index.html",
+	"./static/tabel_new.html",
+	"./static/tabel_show.html",
+	"./static/tabel_edit.html",
+	"./static/tabel_index.html",
+	"./static/buchtabel_new.html",
+	"./static/buchtabel_show.html",
+	"./static/buchtabel_edit.html",
+	"./static/buchtabel_index.html",
+	"./static/css/footer.partial.tmpl.html",
+	"./static/css/header.partial.tmpl.html",
+	"./static/css/sidebar.partial.tmpl.html",
 }
 
 type monatHtml struct { // данные по месяцу при вводе и отображении в mond.HTML
@@ -85,7 +105,7 @@ func checknum(checknum string, min int, max int) int {
 	}
 }
 
-func mondIndexHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+func MondIndexHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/mond_index.html")
@@ -172,7 +192,7 @@ func mondIndexHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request)
 	}
 }
 
-func mondShowHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+func MondShowHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		var _monatHtml monatHtml
@@ -233,7 +253,7 @@ func mondShowHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) 
 	}
 }
 
-func mondEditHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+func MondEditHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		var _monatHtml monatHtml
 		var _monatrow monatrow
@@ -371,7 +391,7 @@ func mondEditHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) 
 	}
 }
 
-func mondNewHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+func MondNewHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		var _monatHtml monatHtml
 

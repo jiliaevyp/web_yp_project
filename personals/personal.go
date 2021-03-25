@@ -17,6 +17,7 @@ import (
 )
 
 var partials = []string{
+	"./static/base.html",
 	"./static/mond_new.html",
 	"./static/mond_show.html",
 	"./static/mond_edit.html",
@@ -25,10 +26,25 @@ var partials = []string{
 	"./static/personal_show.html",
 	"./static/personal_edit.html",
 	"./static/personals_index.html",
+	"./static/worktime_new.html",
+	"./static/worktime_show.html",
+	"./static/worktime_edit.html",
+	"./static/worktime_index.html",
+	"./static/tabel_new.html",
+	"./static/tabel_show.html",
+	"./static/tabel_edit.html",
+	"./static/tabel_index.html",
+	"./static/buchtabel_new.html",
+	"./static/buchtabel_show.html",
+	"./static/buchtabel_edit.html",
+	"./static/buchtabel_index.html",
+	"./static/css/footer.partial.tmpl.html",
+	"./static/css/header.partial.tmpl.html",
+	"./static/css/sidebar.partial.tmpl.html",
 }
 
 type person struct { // данные по сотруднику при вводе и отображении в personal.HTML
-	Name      string
+	Vorename  string
 	Title     string
 	Kadr      string
 	Otdel     string
@@ -49,7 +65,7 @@ type person struct { // данные по сотруднику при вводе
 
 type frombase struct { // строка  при чтении/записи из/в базы personaldb
 	id       int
-	name     string
+	vorename string
 	title    string
 	kadr     string
 	numotdel int
@@ -106,7 +122,7 @@ func makeReadyHtml(p *person) {
 // подготовка и ввод значений из web
 func readFromHtml(p *person, req *http.Request) {
 	p.Title = req.Form["title"][0]
-	p.Name = req.Form["name"][0]
+	p.Vorename = req.Form["vorename"][0]
 	p.Kadr = req.Form["kadr"][0]
 	p.Tarif = req.Form["tarif"][0]
 	p.Otdel = req.Form["otdel"][0]
@@ -118,38 +134,40 @@ func readFromHtml(p *person, req *http.Request) {
 }
 
 // проверка вводимых значений
-func checkNumer(personalhtml *person) {
+func checkNumer(personalhtml *person) int {
 	var err int
+	errout := 0
 	err = checknum(personalhtml.Tarif, 10, 1000)
 	if err != 0 {
 		personalhtml.ErrRange = "1"
 		personalhtml.ErrTarif = "1"
-		personalhtml.Errors = "1"
+		errout = 1
 	}
 	err = checknum(personalhtml.Numotdel, 0, 20)
 	if err != 0 {
 		personalhtml.ErrRange = "1"
 		personalhtml.ErrNumotd = "1"
-		personalhtml.Errors = "1"
+		errout = 1
 	}
 	err, personalhtml.Email, _ = inpMailAddress(personalhtml.Title + "<" + personalhtml.Email + ">") // проверка email адреса
 	if err > 0 {
-		personalhtml.Errors = "1"
 		personalhtml.ErrEmail = "1"
+		errout = 1
 	}
 	_, err1 := libphonenumber.Parse(personalhtml.Phone, "RU")
 	if err1 != nil {
-		personalhtml.Errors = "1"
 		personalhtml.ErrPhone = "1"
+		errout = 1
 	}
-	if personalhtml.Name == "" || personalhtml.Title == "" || personalhtml.Kadr == "" || personalhtml.Otdel == "" || personalhtml.Address == "" {
+	if personalhtml.Vorename == "" || personalhtml.Title == "" || personalhtml.Kadr == "" || personalhtml.Otdel == "" || personalhtml.Address == "" {
 		personalhtml.Empty = "1"
-		personalhtml.Errors = "1"
+		errout = 1
 	}
+	return errout
 }
 
 // просмотр таблицы из personaldb
-func personalsIndexHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+func Personalshandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/personals_index.html")
@@ -181,7 +199,7 @@ func personalsIndexHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Req
 			err = rows.Scan( // пересылка  данных строки базы personals в "p"
 				&p.id,
 				&p.title,
-				&p.name,
+				&p.vorename,
 				&p.kadr,
 				&p.tarif,
 				&p.numotdel,
@@ -196,10 +214,10 @@ func personalsIndexHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Req
 				return
 			}
 			var personalhtml person
-			personalhtml.Name = p.name
+			personalhtml.Vorename = p.vorename
 			personalhtml.Title = p.title
 			personalhtml.Kadr = p.kadr
-			personalhtml.Tarif = strconv.Itoa(p.tarif)
+			personalhtml.Tarif = strconv.Itoa(p.tarif) // int ---> string for HTML
 			personalhtml.Numotdel = strconv.Itoa(p.numotdel)
 			personalhtml.Otdel = p.otdel
 			personalhtml.Email = p.email
@@ -208,10 +226,8 @@ func personalsIndexHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Req
 			personalhtml.Ready = "1"
 			personalhtml.Errors = "0"
 			personalhtml.Empty = "0"
-			personals.Persontable = append( // добавление строки в таблицу Personalstab для personals_index.html
-				personals.Persontable,
-				personalhtml,
-			)
+			// добавление строки в таблицу Personalstab для personals_index.html
+			personals.Persontable = append(personals.Persontable, personalhtml)
 		}
 		personals.Ready = "1"
 
@@ -225,7 +241,7 @@ func personalsIndexHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Req
 }
 
 // просмотр записи из personaldb
-func personalShowhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+func PersonalShowhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/personal_show.html")
@@ -235,9 +251,6 @@ func personalShowhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 			http.Error(w, "Internal Server ParseFiles Error", http.StatusInternalServerError)
 			return
 		}
-		title := req.URL.Query().Get("title")
-		row := db.QueryRow("SELECT * FROM personals WHERE title=$1", title)
-
 		var personalhtml person
 		personalhtml.Ready = "1"     // 1 - ввод успешный
 		personalhtml.Errors = "0"    // 1 - ошибки при вводе
@@ -247,16 +260,17 @@ func personalShowhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 		personalhtml.ErrEmail = "0"  // 1 - ошибка в email
 		personalhtml.ErrTarif = "0"  // 1 - ошибка в тарифе
 		personalhtml.ErrNumotd = "0" // 1 - ошибка в номере отдела
+		title := req.URL.Query().Get("title")
+		row := db.QueryRow("SELECT * FROM personals WHERE title=$1", title)
 
-		// чтение строки из таблицы
 		var p frombase
-		err = row.Scan( // пересылка  данных строки базы personals в personrow
-			&p.id,
+		err = row.Scan( // чтение строки из таблицы
+			&p.id, // int
 			&p.title,
-			&p.name,
+			&p.vorename,
 			&p.kadr,
-			&p.tarif,
-			&p.numotdel,
+			&p.tarif,    // int
+			&p.numotdel, // int
 			&p.otdel,
 			&p.email,
 			&p.phone,
@@ -265,12 +279,12 @@ func personalShowhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 		if err != nil {
 			fmt.Println("ошибка распаковки строки show")
 			panic(err)
-		}
+		} // подготовка HTML
 		personalhtml.Title = p.title
-		personalhtml.Name = p.name
+		personalhtml.Vorename = p.vorename
 		personalhtml.Kadr = p.kadr
-		personalhtml.Tarif = strconv.Itoa(p.tarif)
-		personalhtml.Numotdel = strconv.Itoa(p.numotdel)
+		personalhtml.Tarif = strconv.Itoa(p.tarif)       // int ---> string
+		personalhtml.Numotdel = strconv.Itoa(p.numotdel) // int ---> string
 		personalhtml.Otdel = p.otdel
 		personalhtml.Email = p.email
 		personalhtml.Phone = p.phone
@@ -286,7 +300,7 @@ func personalShowhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 }
 
 // новая запись формы personal в базу personaldb
-func personalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+func PersonalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/personal_new.html")
@@ -305,7 +319,7 @@ func personalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reques
 			makeReadyHtml(&personalhtml) // подготовка значений для web
 			//readFromHtml(&personalhtml, req)  	// ввод значений из web
 			personalhtml.Title = req.Form["title"][0]
-			personalhtml.Name = req.Form["name"][0]
+			personalhtml.Vorename = req.Form["vorename"][0]
 			personalhtml.Kadr = req.Form["kadr"][0]
 			personalhtml.Tarif = req.Form["tarif"][0]
 			personalhtml.Otdel = req.Form["otdel"][0]
@@ -313,32 +327,37 @@ func personalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reques
 			personalhtml.Email = req.Form["email"][0]
 			personalhtml.Phone = req.Form["phone"][0]
 			personalhtml.Address = req.Form["address"][0]
-			checkNumer(&personalhtml) // проверка числовых значений
-			if personalhtml.Errors == "0" {
+
+			// проверка введенных данных
+			if checkNumer(&personalhtml) == 0 {
+				personalhtml.Errors = "0" // ввод корректный
 				personalhtml.Ready = "1"
 				//добавление записи в базу
 				title := personalhtml.Title
 				// удаление старой записи
-				_, err1 := db.Exec("DELETE FROM personals WHERE title = $1", title)
-				if err1 != nil {
-					fmt.Println("Ошибка при удалении старой записи в personals title = ", title)
-					panic(err)
+				row := db.QueryRow("SELECT * FROM personals WHERE title=$1", title)
+				if row != nil { // если запись есть удаляем
+					_, err1 := db.Exec("DELETE FROM personals WHERE title = $1", title)
+					if err1 != nil {
+						fmt.Println("Ошибка при удалении старой записи в personals title = ", title)
+						panic(err)
+					}
 				}
 				var p frombase
 				p.title = personalhtml.Title
-				p.name = personalhtml.Name
+				p.vorename = personalhtml.Vorename
 				p.kadr = personalhtml.Kadr
-				p.tarif, _ = strconv.Atoi(personalhtml.Tarif)
+				p.tarif, _ = strconv.Atoi(personalhtml.Tarif) // перевод в int для базы
 				p.otdel = personalhtml.Otdel
-				p.numotdel, _ = strconv.Atoi(personalhtml.Numotdel)
+				p.numotdel, _ = strconv.Atoi(personalhtml.Numotdel) // перевод в int для базы
 				p.email = personalhtml.Email
 				p.phone = personalhtml.Phone
 				p.address = personalhtml.Address
 
-				sqlStatement := `INSERT INTO personals (title,name,kadr,tarif,numotdel,otdel,email,phone,address) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`
+				sqlStatement := `INSERT INTO personals (title, vorename, kadr,tarif,numotdel,otdel,email,phone,address) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`
 				_, err2 := db.Exec(sqlStatement,
 					p.title,
-					p.name,
+					p.vorename,
 					p.kadr,
 					p.tarif,
 					p.numotdel,
@@ -362,7 +381,7 @@ func personalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reques
 }
 
 // редактирование формы personal и замена в базе personaldb
-func personalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/personal_edit.html")
@@ -372,23 +391,17 @@ func personalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 			http.Error(w, "Internal Server ParseFiles Error", http.StatusInternalServerError)
 			return
 		}
-		title := req.URL.Query().Get("title")
-		row := db.QueryRow("SELECT * FROM personals WHERE title=$1", title)
 
-		var personalhtml person
-		makeReadyHtml(&personalhtml) // подготовка значений для web
-
-		personalhtml.Empty = "1" // 1 - есть пустые поля
-
-		// чтение строки из таблицы
 		var p frombase
+		title := req.URL.Query().Get("title") // чтение строки из таблицы
+		row := db.QueryRow("SELECT * FROM personals WHERE title=$1", title)
 		err = row.Scan( // пересылка  данных строки базы personals в p
 			&p.id,
 			&p.title,
-			&p.name,
+			&p.vorename,
 			&p.kadr,
-			&p.tarif,
-			&p.numotdel,
+			&p.tarif,    // int
+			&p.numotdel, // int
 			&p.otdel,
 			&p.email,
 			&p.phone,
@@ -398,11 +411,14 @@ func personalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 			fmt.Println("edit --> ошибка распаковки строки при чтении записи title=", title)
 			panic(err)
 		} else {
+			var personalhtml person
+			makeReadyHtml(&personalhtml) // подготовка флагов для HTML = 0
+			personalhtml.Empty = "1"     // якобы - есть пустые поля для отображения
 			personalhtml.Title = p.title
-			personalhtml.Name = p.name
+			personalhtml.Vorename = p.vorename
 			personalhtml.Kadr = p.kadr
-			personalhtml.Tarif = strconv.Itoa(p.tarif)
-			personalhtml.Numotdel = strconv.Itoa(p.numotdel)
+			personalhtml.Tarif = strconv.Itoa(p.tarif)       // int ---> string
+			personalhtml.Numotdel = strconv.Itoa(p.numotdel) // int ---> string
 			personalhtml.Otdel = p.otdel
 			personalhtml.Email = p.email
 			personalhtml.Phone = p.phone
@@ -413,70 +429,47 @@ func personalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 				makeReadyHtml(&personalhtml) // подготовка значений для web
 				//readFromHtml(&personalhtml, req)  	// ввод значений из web
 				personalhtml.Title = req.Form["title"][0]
-				personalhtml.Name = req.Form["name"][0]
+				personalhtml.Vorename = req.Form["vorename"][0]
 				personalhtml.Kadr = req.Form["kadr"][0]
 				personalhtml.Tarif = req.Form["tarif"][0]
-				personalhtml.Otdel = req.Form["otdel"][0]
 				personalhtml.Numotdel = req.Form["numotdel"][0]
+				personalhtml.Otdel = req.Form["otdel"][0]
 				personalhtml.Email = req.Form["email"][0]
 				personalhtml.Phone = req.Form["phone"][0]
 				personalhtml.Address = req.Form["address"][0]
-				var p frombase
-				p.tarif = 10
-				p.tarif, err = strconv.Atoi(personalhtml.Tarif)
-				if err != nil {
-					personalhtml.ErrRange = "1"
-					personalhtml.ErrTarif = "1"
-					personalhtml.Errors = "1"
-				}
-				p.numotdel = 100
-				p.numotdel, err = strconv.Atoi(personalhtml.Numotdel)
-				if err != nil {
-					personalhtml.ErrRange = "1"
-					personalhtml.ErrNumotd = "1"
-					personalhtml.Errors = "1"
-				}
-				errmail, _, _ := inpMailAddress(personalhtml.Title +
-					"<" + personalhtml.Email + ">") // проверка email адреса
-				if errmail > 0 {
-					personalhtml.Errors = "1"
-					personalhtml.ErrEmail = "1"
-				}
-				_, err := libphonenumber.Parse(personalhtml.Phone, "RU")
-				if err != nil {
-					personalhtml.Errors = "1"
-					personalhtml.ErrPhone = "1"
-				}
-				if personalhtml.Name == "" || personalhtml.Title == "" || personalhtml.Kadr == "" || personalhtml.Otdel == "" {
-					personalhtml.Empty = "1"
-					personalhtml.Errors = "1"
-				}
-				if personalhtml.Errors == "0" {
+
+				// проверка введенных данных
+				if checkNumer(&personalhtml) == 0 {
+					personalhtml.Errors = "0" // ввод корректный
 					personalhtml.Ready = "1"
+					var p frombase
 					p.title = personalhtml.Title
-					p.name = personalhtml.Name
+					p.vorename = personalhtml.Vorename
 					p.kadr = personalhtml.Kadr
+					p.tarif, _ = strconv.Atoi(personalhtml.Tarif)       // перевод в int для базы
+					p.numotdel, _ = strconv.Atoi(personalhtml.Numotdel) // перевод в int для базы
+					p.otdel = personalhtml.Otdel
 					p.otdel = personalhtml.Otdel
 					p.email = personalhtml.Email
 					p.phone = personalhtml.Phone
 					p.address = personalhtml.Address
 
-					_, err := db.Exec("DELETE FROM personals WHERE title = $1", title)
+					_, err := db.Exec("DELETE FROM personals WHERE title = $1", title) // удаление  записи по считанному title
 					if err != nil {
 						fmt.Println("Ошибка при удалении старой записи title=", title)
 						panic(err)
 					}
-					sqlStatement := `INSERT INTO personals (title,name,kadr,otdel,numotdel,email,phone,address,tarif) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`
+					sqlStatement := `INSERT INTO personals (title,vorename,kadr,tarif,numotdel,otdel,email,phone,address) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`
 					_, err = db.Exec(sqlStatement,
 						p.title,
-						p.name,
+						p.vorename,
 						p.kadr,
-						p.otdel,
+						p.tarif,
 						p.numotdel,
+						p.otdel,
 						p.email,
 						p.phone,
 						p.address,
-						p.tarif,
 					)
 					if err != nil {
 						fmt.Println("Ошибка записи измененной строки в personals", "title=", p.title)
