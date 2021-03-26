@@ -450,7 +450,6 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 					p.tarif, _ = strconv.Atoi(personalhtml.Tarif)       // перевод в int для базы
 					p.numotdel, _ = strconv.Atoi(personalhtml.Numotdel) // перевод в int для базы
 					p.otdel = personalhtml.Otdel
-					p.otdel = personalhtml.Otdel
 					p.email = personalhtml.Email
 					p.phone = personalhtml.Phone
 					p.address = personalhtml.Address
