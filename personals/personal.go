@@ -44,7 +44,7 @@ var partials = []string{
 }
 
 type person struct { // данные по сотруднику при вводе и отображении в personal.HTML
-	Vorename  string
+	Forename  string
 	Title     string
 	Kadr      string
 	Otdel     string
@@ -65,7 +65,7 @@ type person struct { // данные по сотруднику при вводе
 
 type frombase struct { // строка  при чтении/записи из/в базы personaldb
 	id       int
-	vorename string
+	forename string
 	title    string
 	kadr     string
 	numotdel int
@@ -122,7 +122,7 @@ func makeReadyHtml(p *person) {
 // подготовка и ввод значений из web
 func readFromHtml(p *person, req *http.Request) {
 	p.Title = req.Form["title"][0]
-	p.Vorename = req.Form["vorename"][0]
+	p.Forename = req.Form["forename"][0]
 	p.Kadr = req.Form["kadr"][0]
 	p.Tarif = req.Form["tarif"][0]
 	p.Otdel = req.Form["otdel"][0]
@@ -159,7 +159,7 @@ func checkNumer(personalhtml *person) int {
 		personalhtml.ErrPhone = "1"
 		errout = 1
 	}
-	if personalhtml.Vorename == "" || personalhtml.Title == "" || personalhtml.Kadr == "" || personalhtml.Otdel == "" || personalhtml.Address == "" {
+	if personalhtml.Forename == "" || personalhtml.Title == "" || personalhtml.Kadr == "" || personalhtml.Otdel == "" || personalhtml.Address == "" {
 		personalhtml.Empty = "1"
 		errout = 1
 	}
@@ -199,7 +199,7 @@ func Personalshandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request)
 			err = rows.Scan( // пересылка  данных строки базы personals в "p"
 				&p.id,
 				&p.title,
-				&p.vorename,
+				&p.forename,
 				&p.kadr,
 				&p.tarif,
 				&p.numotdel,
@@ -214,7 +214,7 @@ func Personalshandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request)
 				return
 			}
 			var personalhtml person
-			personalhtml.Vorename = p.vorename
+			personalhtml.Forename = p.forename
 			personalhtml.Title = p.title
 			personalhtml.Kadr = p.kadr
 			personalhtml.Tarif = strconv.Itoa(p.tarif) // int ---> string for HTML
@@ -267,7 +267,7 @@ func PersonalShowhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 		err = row.Scan( // чтение строки из таблицы
 			&p.id, // int
 			&p.title,
-			&p.vorename,
+			&p.forename,
 			&p.kadr,
 			&p.tarif,    // int
 			&p.numotdel, // int
@@ -281,7 +281,7 @@ func PersonalShowhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 			panic(err)
 		} // подготовка HTML
 		personalhtml.Title = p.title
-		personalhtml.Vorename = p.vorename
+		personalhtml.Forename = p.forename
 		personalhtml.Kadr = p.kadr
 		personalhtml.Tarif = strconv.Itoa(p.tarif)       // int ---> string
 		personalhtml.Numotdel = strconv.Itoa(p.numotdel) // int ---> string
@@ -319,7 +319,7 @@ func PersonalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reques
 			makeReadyHtml(&personalhtml) // подготовка значений для web
 			//readFromHtml(&personalhtml, req)  	// ввод значений из web
 			personalhtml.Title = req.Form["title"][0]
-			personalhtml.Vorename = req.Form["vorename"][0]
+			personalhtml.Forename = req.Form["forename"][0]
 			personalhtml.Kadr = req.Form["kadr"][0]
 			personalhtml.Tarif = req.Form["tarif"][0]
 			personalhtml.Otdel = req.Form["otdel"][0]
@@ -345,7 +345,7 @@ func PersonalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reques
 				}
 				var p frombase
 				p.title = personalhtml.Title
-				p.vorename = personalhtml.Vorename
+				p.forename = personalhtml.Forename
 				p.kadr = personalhtml.Kadr
 				p.tarif, _ = strconv.Atoi(personalhtml.Tarif) // перевод в int для базы
 				p.otdel = personalhtml.Otdel
@@ -354,10 +354,10 @@ func PersonalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reques
 				p.phone = personalhtml.Phone
 				p.address = personalhtml.Address
 
-				sqlStatement := `INSERT INTO personals (title, vorename, kadr,tarif,numotdel,otdel,email,phone,address) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`
+				sqlStatement := `INSERT INTO personals (title, forename, kadr,tarif,numotdel,otdel,email,phone,address) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`
 				_, err2 := db.Exec(sqlStatement,
 					p.title,
-					p.vorename,
+					p.forename,
 					p.kadr,
 					p.tarif,
 					p.numotdel,
@@ -368,6 +368,7 @@ func PersonalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reques
 				)
 				if err2 != nil {
 					fmt.Println("Ошибка записи новой строки в personalNew")
+					panic(err2)
 				}
 			}
 		}
@@ -398,7 +399,7 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 		err = row.Scan( // пересылка  данных строки базы personals в p
 			&p.id,
 			&p.title,
-			&p.vorename,
+			&p.forename,
 			&p.kadr,
 			&p.tarif,    // int
 			&p.numotdel, // int
@@ -415,7 +416,7 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 			makeReadyHtml(&personalhtml) // подготовка флагов для HTML = 0
 			personalhtml.Empty = "1"     // якобы - есть пустые поля для отображения
 			personalhtml.Title = p.title
-			personalhtml.Vorename = p.vorename
+			personalhtml.Forename = p.forename
 			personalhtml.Kadr = p.kadr
 			personalhtml.Tarif = strconv.Itoa(p.tarif)       // int ---> string
 			personalhtml.Numotdel = strconv.Itoa(p.numotdel) // int ---> string
@@ -429,7 +430,7 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 				makeReadyHtml(&personalhtml) // подготовка значений для web
 				//readFromHtml(&personalhtml, req)  	// ввод значений из web
 				personalhtml.Title = req.Form["title"][0]
-				personalhtml.Vorename = req.Form["vorename"][0]
+				personalhtml.Forename = req.Form["forename"][0]
 				personalhtml.Kadr = req.Form["kadr"][0]
 				personalhtml.Tarif = req.Form["tarif"][0]
 				personalhtml.Numotdel = req.Form["numotdel"][0]
@@ -444,7 +445,7 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 					personalhtml.Ready = "1"
 					var p frombase
 					p.title = personalhtml.Title
-					p.vorename = personalhtml.Vorename
+					p.forename = personalhtml.Forename
 					p.kadr = personalhtml.Kadr
 					p.tarif, _ = strconv.Atoi(personalhtml.Tarif)       // перевод в int для базы
 					p.numotdel, _ = strconv.Atoi(personalhtml.Numotdel) // перевод в int для базы
@@ -459,10 +460,10 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 						fmt.Println("Ошибка при удалении старой записи title=", title)
 						panic(err)
 					}
-					sqlStatement := `INSERT INTO personals (title,vorename,kadr,tarif,numotdel,otdel,email,phone,address) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`
+					sqlStatement := `INSERT INTO personals (title,forename,kadr,tarif,numotdel,otdel,email,phone,address) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`
 					_, err = db.Exec(sqlStatement,
 						p.title,
-						p.vorename,
+						p.forename,
 						p.kadr,
 						p.tarif,
 						p.numotdel,
@@ -474,6 +475,8 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 					if err != nil {
 						fmt.Println("Ошибка записи измененной строки в personals", "title=", p.title)
 						panic(err)
+					} else {
+						fmt.Println("успешно записали edit title=", p.title)
 					}
 
 				}

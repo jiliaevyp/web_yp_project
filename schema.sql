@@ -28,7 +28,7 @@ create table if not exists personals
     id        serial       not null
         constraint personals_pk
             primary key,
-    name      varchar(32)  not null,
+    forename      varchar(32)  not null,
     title     varchar(32)  not null,
     kadr      varchar(64)  not null,
     otdel     varchar(64)  not null,
