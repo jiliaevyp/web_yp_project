@@ -47,7 +47,6 @@ type person struct { // данные по сотруднику при вводе
 	Forename  string
 	Title     string
 	Kadr      string
-	Otdel     string
 	Numotdel  string
 	Email     string
 	Phone     string
@@ -69,7 +68,6 @@ type frombase struct { // строка  при чтении/записи из/в
 	title    string
 	kadr     string
 	numotdel int
-	otdel    string
 	email    string
 	phone    string
 	address  string
@@ -125,7 +123,6 @@ func readFromHtml(p *person, req *http.Request) {
 	p.Forename = req.Form["forename"][0]
 	p.Kadr = req.Form["kadr"][0]
 	p.Tarif = req.Form["tarif"][0]
-	p.Otdel = req.Form["otdel"][0]
 	p.Numotdel = req.Form["numotdel"][0]
 	p.Email = req.Form["email"][0]
 	p.Phone = req.Form["phone"][0]
@@ -159,7 +156,7 @@ func checkNumer(personalhtml *person) int {
 		personalhtml.ErrPhone = "1"
 		errout = 1
 	}
-	if personalhtml.Forename == "" || personalhtml.Title == "" || personalhtml.Kadr == "" || personalhtml.Otdel == "" || personalhtml.Address == "" {
+	if personalhtml.Forename == "" || personalhtml.Title == "" || personalhtml.Kadr == "" || personalhtml.Address == "" {
 		personalhtml.Empty = "1"
 		errout = 1
 	}
@@ -201,9 +198,8 @@ func Personalshandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request)
 				&p.title,
 				&p.forename,
 				&p.kadr,
-				&p.tarif,
 				&p.numotdel,
-				&p.otdel,
+				&p.tarif,
 				&p.email,
 				&p.phone,
 				&p.address,
@@ -219,7 +215,6 @@ func Personalshandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request)
 			personalhtml.Kadr = p.kadr
 			personalhtml.Tarif = strconv.Itoa(p.tarif) // int ---> string for HTML
 			personalhtml.Numotdel = strconv.Itoa(p.numotdel)
-			personalhtml.Otdel = p.otdel
 			personalhtml.Email = p.email
 			personalhtml.Phone = p.phone
 			personalhtml.Address = p.address
@@ -269,9 +264,8 @@ func PersonalShowhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 			&p.title,
 			&p.forename,
 			&p.kadr,
-			&p.tarif,    // int
 			&p.numotdel, // int
-			&p.otdel,
+			&p.tarif,    // int
 			&p.email,
 			&p.phone,
 			&p.address,
@@ -285,7 +279,6 @@ func PersonalShowhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 		personalhtml.Kadr = p.kadr
 		personalhtml.Tarif = strconv.Itoa(p.tarif)       // int ---> string
 		personalhtml.Numotdel = strconv.Itoa(p.numotdel) // int ---> string
-		personalhtml.Otdel = p.otdel
 		personalhtml.Email = p.email
 		personalhtml.Phone = p.phone
 		personalhtml.Address = p.address
@@ -322,7 +315,6 @@ func PersonalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reques
 			personalhtml.Forename = req.Form["forename"][0]
 			personalhtml.Kadr = req.Form["kadr"][0]
 			personalhtml.Tarif = req.Form["tarif"][0]
-			personalhtml.Otdel = req.Form["otdel"][0]
 			personalhtml.Numotdel = req.Form["numotdel"][0]
 			personalhtml.Email = req.Form["email"][0]
 			personalhtml.Phone = req.Form["phone"][0]
@@ -347,21 +339,19 @@ func PersonalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reques
 				p.title = personalhtml.Title
 				p.forename = personalhtml.Forename
 				p.kadr = personalhtml.Kadr
-				p.tarif, _ = strconv.Atoi(personalhtml.Tarif) // перевод в int для базы
-				p.otdel = personalhtml.Otdel
+				p.tarif, _ = strconv.Atoi(personalhtml.Tarif)       // перевод в int для базы
 				p.numotdel, _ = strconv.Atoi(personalhtml.Numotdel) // перевод в int для базы
 				p.email = personalhtml.Email
 				p.phone = personalhtml.Phone
 				p.address = personalhtml.Address
 
-				sqlStatement := `INSERT INTO personals (title, forename, kadr,tarif,numotdel,otdel,email,phone,address) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`
+				sqlStatement := `INSERT INTO personals (title, forename, kadr,numotdel,tarif,email,phone,address) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`
 				_, err2 := db.Exec(sqlStatement,
 					p.title,
 					p.forename,
 					p.kadr,
-					p.tarif,
 					p.numotdel,
-					p.otdel,
+					p.tarif,
 					p.email,
 					p.phone,
 					p.address,
@@ -403,7 +393,6 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 			&p.kadr,
 			&p.tarif,    // int
 			&p.numotdel, // int
-			&p.otdel,
 			&p.email,
 			&p.phone,
 			&p.address,
@@ -420,7 +409,6 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 			personalhtml.Kadr = p.kadr
 			personalhtml.Tarif = strconv.Itoa(p.tarif)       // int ---> string
 			personalhtml.Numotdel = strconv.Itoa(p.numotdel) // int ---> string
-			personalhtml.Otdel = p.otdel
 			personalhtml.Email = p.email
 			personalhtml.Phone = p.phone
 			personalhtml.Address = p.address
@@ -434,7 +422,6 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 				personalhtml.Kadr = req.Form["kadr"][0]
 				personalhtml.Tarif = req.Form["tarif"][0]
 				personalhtml.Numotdel = req.Form["numotdel"][0]
-				personalhtml.Otdel = req.Form["otdel"][0]
 				personalhtml.Email = req.Form["email"][0]
 				personalhtml.Phone = req.Form["phone"][0]
 				personalhtml.Address = req.Form["address"][0]
@@ -449,7 +436,6 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 					p.kadr = personalhtml.Kadr
 					p.tarif, _ = strconv.Atoi(personalhtml.Tarif)       // перевод в int для базы
 					p.numotdel, _ = strconv.Atoi(personalhtml.Numotdel) // перевод в int для базы
-					p.otdel = personalhtml.Otdel
 					p.email = personalhtml.Email
 					p.phone = personalhtml.Phone
 					p.address = personalhtml.Address
@@ -459,14 +445,13 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 						fmt.Println("Ошибка при удалении старой записи title=", title)
 						panic(err)
 					}
-					sqlStatement := `INSERT INTO personals (title,forename,kadr,tarif,numotdel,otdel,email,phone,address) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`
+					sqlStatement := `INSERT INTO personals (title, forename, kadr,numotdel,tarif,email,phone,address) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`
 					_, err = db.Exec(sqlStatement,
 						p.title,
 						p.forename,
 						p.kadr,
-						p.tarif,
 						p.numotdel,
-						p.otdel,
+						p.tarif,
 						p.email,
 						p.phone,
 						p.address,
