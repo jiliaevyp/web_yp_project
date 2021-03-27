@@ -9,7 +9,6 @@ create table if not exists personals
     kadr      varchar  not null,
     numotdel integer      not null,
     tarif     integer      not null,
-    area     varchar  not null,
     email     varchar not null,
     phone     varchar  not null,
     address   varchar not null

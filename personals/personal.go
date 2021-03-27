@@ -417,19 +417,67 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 			if req.Method == "POST" {
 				req.ParseForm()
 				makeReadyHtml(&personalhtml) // подготовка значений для web
-				//readFromHtml(&personalhtml, req)  	// ввод значений из web
-				//personalhtml.Title = req.Form["title"][0]
+				// ввод новых данных
+				personalhtml.Errors = "0"
+				personalhtml.Ready = "0"
 				personalhtml.Forename = req.Form["forename"][0]
+				// проверка на пустые поля данных
+				if personalhtml.Forename == "" || personalhtml.Forename == "???" {
+					personalhtml.Forename = "???"
+					personalhtml.Empty = "1"
+					personalhtml.Errors = "1"
+				}
 				personalhtml.Kadr = req.Form["kadr"][0]
-				personalhtml.Tarif = req.Form["tarif"][0]
-				personalhtml.Numotdel = req.Form["numotdel"][0]
-				personalhtml.Email = req.Form["email"][0]
-				personalhtml.Phone = req.Form["phone"][0]
+				if personalhtml.Kadr == "" || personalhtml.Kadr == "???" {
+					personalhtml.Kadr = "???"
+					personalhtml.Empty = "1"
+					personalhtml.Errors = "1"
+				}
 				personalhtml.Address = req.Form["address"][0]
+				if personalhtml.Address == "" || personalhtml.Address == "???" {
+					personalhtml.Address = "???"
+					personalhtml.Empty = "1"
+					personalhtml.Errors = "1"
+				}
+				// ввод и проверка на числа
+				personalhtml.Tarif = req.Form["tarif"][0]
+				if checknum(personalhtml.Tarif, 10, 1000) != 0 {
+					personalhtml.Tarif = "???"
+					personalhtml.ErrRange = "1"
+					personalhtml.ErrTarif = "1"
+					personalhtml.Errors = "1"
+				}
+				personalhtml.Numotdel = req.Form["numotdel"][0]
+				if checknum(personalhtml.Numotdel, 0, 20) != 0 {
+					personalhtml.Numotdel = "???"
+					personalhtml.ErrRange = "1"
+					personalhtml.ErrNumotd = "1"
+					personalhtml.Errors = "1"
+				}
+				personalhtml.Email = req.Form["email"][0]
+				var errmail int
+				if personalhtml.Email != "" && personalhtml.Email != "???" {
+					errmail, personalhtml.Email, _ = inpMailAddress(personalhtml.Title + "<" + personalhtml.Email + ">") // проверка email адреса
+					if errmail > 0 {
+						personalhtml.Email = "???"
+						personalhtml.ErrEmail = "1"
+						personalhtml.Errors = "1"
+					}
+				} else {
+					personalhtml.Email = "???"
+					personalhtml.ErrEmail = "1"
+					personalhtml.Errors = "1"
+				}
 
-				// проверка введенных данных
-				if checkNumer(&personalhtml) == 0 {
-					personalhtml.Errors = "0" // ввод корректный
+				personalhtml.Phone = req.Form["phone"][0]
+				_, err1 := libphonenumber.Parse(personalhtml.Phone, "RU")
+				if err1 != nil {
+					personalhtml.Phone = "???"
+					personalhtml.ErrPhone = "1"
+					personalhtml.Errors = "1"
+				}
+
+				if personalhtml.Errors == "0" {
 					personalhtml.Ready = "1"
 					var p frombase
 					p.title = title //personalhtml.Title
