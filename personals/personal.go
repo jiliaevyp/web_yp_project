@@ -391,8 +391,8 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 			&p.title,
 			&p.forename,
 			&p.kadr,
-			&p.tarif,    // int
 			&p.numotdel, // int
+			&p.tarif,    // int
 			&p.email,
 			&p.phone,
 			&p.address,
@@ -405,6 +405,7 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 			makeReadyHtml(&personalhtml) // подготовка флагов для HTML = 0
 			personalhtml.Empty = "1"     // якобы - есть пустые поля для отображения
 			personalhtml.Title = p.title
+			title = p.title
 			personalhtml.Forename = p.forename
 			personalhtml.Kadr = p.kadr
 			personalhtml.Tarif = strconv.Itoa(p.tarif)       // int ---> string
@@ -417,7 +418,7 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 				req.ParseForm()
 				makeReadyHtml(&personalhtml) // подготовка значений для web
 				//readFromHtml(&personalhtml, req)  	// ввод значений из web
-				personalhtml.Title = req.Form["title"][0]
+				//personalhtml.Title = req.Form["title"][0]
 				personalhtml.Forename = req.Form["forename"][0]
 				personalhtml.Kadr = req.Form["kadr"][0]
 				personalhtml.Tarif = req.Form["tarif"][0]
@@ -431,7 +432,7 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 					personalhtml.Errors = "0" // ввод корректный
 					personalhtml.Ready = "1"
 					var p frombase
-					p.title = personalhtml.Title
+					p.title = title //personalhtml.Title
 					p.forename = personalhtml.Forename
 					p.kadr = personalhtml.Kadr
 					p.tarif, _ = strconv.Atoi(personalhtml.Tarif)       // перевод в int для базы
