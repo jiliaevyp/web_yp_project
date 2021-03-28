@@ -37,58 +37,41 @@ var partials = []string{
 	"./static/css/sidebar.partial.tmpl.html",
 }
 
-type monatHtml struct { // данные по месяцу при вводе и отображении в mond.HTML
-	Id             string
-	Yahre          string
-	Monat          string
-	Nummonat       string
-	Tag            string
-	Hour           string
-	Kf             string
-	Blockmonat     string
-	Nalog          string
-	Blockpersonal  string
-	Blocktimetabel string
-	Blocktabel     string
-	Blockbuchtabel string
-	Timestamp      string
-	Ready          string // "1" - ввод корректен
-	Errors         string // "1" - ошибка при вводе полей
-	Empty          string // "1" - остались пустые поля
-	Range          string // "1" - выход за пределы диапазона
-}
-
-type monatrow struct { // для чтения из таблицы monds
-	Yahre          int
-	Monat          string
-	Nummonat       int
-	Tag            int
-	Hour           int
-	Kf             int
-	Blockmonat     int
-	Nalog          int
-	Blockpersonal  int
-	Blocktimetabel int
-	Blocktabel     int
-	Blockbuchtabel int
-	Id             int
-	Timestamp      int
-}
-
-type monattab struct { // данные по месяцу при отображении строки в monds_index.html
+type monat struct { // данные по месяцу при вводе и отображении в mond.HTML
 	Id       string
 	Yahre    string
-	Monat    string
 	Nummonat string
 	Tag      string
 	Hour     string
 	Kf       string
-	Nalog    string
+	Blmond   string
+	Blpers   string
+	Bltime   string
+	Bltabel  string
+	Blbuch   string
+	Ready    string // "1" - ввод корректен
+	Errors   string // "1" - ошибка при вводе полей
+	Empty    string // "1" - остались пустые поля
+	ErrRange string // "1" - выход за пределы диапазона
+}
+
+type frombase struct { // для чтения из таблицы monds
+	id       int
+	yahre    int
+	nummonat int
+	tag      int
+	hour     int
+	kf       int
+	blmond   int
+	bltime   int
+	bltabel  int
+	blbuch   int
+	blpers   int
 }
 
 var mondtable struct {
-	Ready    string     // флаг готовности
-	Mondstab []monattab // таблица по сотрудниам  в monds_index.html
+	Ready      string  // флаг готовности
+	Mondstable []monat // таблица по сотрудниам  в monds_index.html
 }
 
 // валидация  числовых вводов и диапазонов
@@ -105,391 +88,457 @@ func checknum(checknum string, min int, max int) int {
 	}
 }
 
-func MondIndexHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+// просмотр таблицы из personaldb
+func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/mond_index.html")
 		t, err := template.ParseFiles(files...) // Parse template file.
 		if err != nil {
 			log.Println(err.Error())
-			http.Error(w, "Mond Internal Server ParseFiles Error", http.StatusInternalServerError)
+			http.Error(w, "Internal Server ParseFiles Error", http.StatusInternalServerError)
 			return
 		}
+		del := req.URL.Query().Get("del")
+		nummonat := req.URL.Query().Get("nummonat")
+		num, _ := strconv.Atoi(nummonat)
+		if del == "del" {
+			_, err = db.Exec("DELETE FROM personals WHERE nummonat = $2", num)
+			if err != nil { // удаление старой записи
+				panic(err)
+			}
+		}
+		mondtable.Mondstable = nil
 
-		mondtable.Mondstab = nil
-		rows, err1 := db.Query("SELECT * FROM monds;")
+		rows, err1 := db.Query(`SELECT * FROM monds`)
 		if err1 != nil {
-			fmt.Println(" Monds ошибка чтения таблицы")
-			panic(err)
-		} else {
-			fmt.Println(" Прочитали monds таблицу")
+			fmt.Println(" table monds ошибка чтения ")
+			panic(err1)
 		}
 		defer rows.Close()
 
-		//var _monatrow monatrow
-		rowtable := monattab{} // строка  в формате string для monds_index.html
-
 		for rows.Next() {
-			p := monattab{}
-			fmt.Println(" начали распаковку строк monds таблицы")
-			err2 := rows.Scan( // пересылка  данных строки таблицы monds
-				&p.Id,
-				&p.Monat,
-				&p.Nummonat,
-				&p.Tag,
-				&p.Hour,
-				&p.Kf,
-				//&p.Blockmonat,
-				&p.Nalog,
-				//&p.Blockpersonal,
-				//&p.Blocktimetabel,
-				//&p.Blocktabel,
-				//&p.Blockbuchtabel,
-				//&_monatrow.Id,
-				//&_monatrow.Timestamp,
+			var p frombase
+			err = rows.Scan( // пересылка  данных строки базы personals в "p"
+				&p.id,
+				&p.yahre,
+				&p.nummonat,
+				&p.tag,
+				&p.hour,
+				&p.kf,
+				&p.blmond,
+				&p.bltime,
+				&p.bltabel,
+				&p.blbuch,
+				&p.blpers,
 			)
-			fmt.Println(p)
-			if err2 != nil {
-				fmt.Println("monds_index ошибка распаковки строки ")
+			if err != nil {
+				fmt.Println("index monds ошибка распаковки строки ")
 				panic(err)
 				return
-			} else {
-				fmt.Println(" распаковали строку из monds_index")
 			}
-			//rowtable.Yahre 		= strconv.Itoa(p.Yahre)
-			//rowtable.Monat 		= p.Monat
-			//rowtable.Nummonat 	= strconv.Itoa(p.Nummonat)
-			//rowtable.Tag 		= strconv.Itoa(p.Tag)
-			//rowtable.Hour 		= strconv.Itoa(p.Hour)
-			//rowtable.Kf 		= strconv.Itoa(p.Kf)
-			////rowtable.BlockMonat 		= strconv.Itoa(p.BlockMonat)
-			//rowtable.Nalog 		= strconv.Itoa(p.Nalog)
-			//rowtable.BlockPersonal 	= strconv.Itoa(_monatrow.BlockPersonal)
-			//rowtable.BlockTimetabel 	= strconv.Itoa(_monatrow.BlockTimetabel)
-			//rowtable.BlockTabel 		= strconv.Itoa(_monatrow.BlockTabel)
-			//rowtable.BlockBuchtabel 	= strconv.Itoa(_monatrow.BlockBuchtabel)
-			//rowtable.Timestamp 		= strconv.Itoa(_monatrow.Timestamp)
-			//rowtable.Id 				= strconv.Itoa(_monatrow.Id)
-			mondtable.Mondstab = append(mondtable.Mondstab, rowtable) // добавление строки в таблицу Personalstab для personals_index.html
+			var monatlhtml monat
+			monatlhtml.Yahre = strconv.Itoa(p.yahre)
+			monatlhtml.Nummonat = strconv.Itoa(p.nummonat)
+			monatlhtml.Tag = strconv.Itoa(p.tag)
+			monatlhtml.Hour = strconv.Itoa(p.hour) // int ---> string for HTML
+			monatlhtml.Kf = strconv.Itoa(p.kf)
+			monatlhtml.Blmond = strconv.Itoa(p.blmond)
+			monatlhtml.Bltime = strconv.Itoa(p.bltime)
+			monatlhtml.Bltabel = strconv.Itoa(p.bltabel)
+			monatlhtml.Blbuch = strconv.Itoa(p.blbuch)
+			monatlhtml.Blpers = strconv.Itoa(p.blpers)
+			monatlhtml.Ready = "1"    // "1" - ввод корректен
+			monatlhtml.Errors = "0"   // "1" - ошибка при вводе полей
+			monatlhtml.Empty = "0"    // "1" - остались пустые поля
+			monatlhtml.ErrRange = "0" // "1" - выход за пределы диапазона
+
+			// добавление строки в таблицу Personalstab для personals_index.html
+			mondtable.Mondstable = append(mondtable.Mondstable, monatlhtml)
 		}
-		fmt.Println("after unpack rows in index")
 		mondtable.Ready = "1"
-		//monat := req.URL.Query().Get("monat")
-		//del := req.URL.Query().Get("del")
-		//
-		//if del == "del" {
-		//	_, err = db.Exec("delete from monds where monat = $2", monat)
-		//	if err != nil { // удаление старой записи
-		//		panic(err)
-		//	}
-		//}
+
 		err = t.ExecuteTemplate(w, "base", mondtable)
 		if err != nil {
 			log.Println(err.Error())
-			http.Error(w, "Internal Server Execute Error", http.StatusInternalServerError)
+			http.Error(w, "Index Internal Server Execute Error", http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
-func MondShowHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+// просмотр записи из personaldb
+func Showhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
-
-		var _monatHtml monatHtml
-		var _monatrow monatrow
 
 		files := append(partials, "./static/mond_show.html")
 		t, err := template.ParseFiles(files...) // Parse template file.
 		if err != nil {
 			log.Println(err.Error())
-			http.Error(w, "Mond Internal Server ParseFiles Error", http.StatusInternalServerError)
+			http.Error(w, "Internal Server ParseFiles Error", http.StatusInternalServerError)
 			return
 		}
-		monat := req.URL.Query().Get("monat")
-		row := db.QueryRow("SELECT * FROM monds WHERE monat=$2", monat) // выборка строки
-		//if err1 != nil  {
-		//	panic(err1)
-		//}
-		err2 := row.Scan(&_monatrow.Yahre, // чтение переменных из полей
-			&_monatrow.Monat,
-			&_monatrow.Nummonat,
-			&_monatrow.Tag,
-			&_monatrow.Hour,
-			&_monatrow.Kf,
-			&_monatrow.Blockmonat,
-			&_monatrow.Nalog,
-			&_monatrow.Blockpersonal,
-			&_monatrow.Blocktimetabel,
-			&_monatrow.Blocktabel,
-			&_monatrow.Blockbuchtabel,
-			//&_monatrow.Id,
-			&_monatrow.Timestamp,
+		var monathtml monat
+		monathtml.Ready = "1"    // 1 - ввод успешный
+		monathtml.Errors = "0"   // 1 - ошибки при вводе
+		monathtml.Empty = "0"    // 1 - есть пустые поля
+		monathtml.ErrRange = "0" // 1 - выход за пределы диапазона
+
+		nummonat := req.URL.Query().Get("nummonat")
+		row := db.QueryRow("SELECT * FROM monds WHERE nummonat=$2", nummonat)
+
+		var p frombase
+		err = row.Scan( // чтение строки из таблицы
+			&p.id,
+			&p.yahre,
+			&p.nummonat,
+			&p.tag,
+			&p.hour,
+			&p.kf,
+			&p.blmond,
+			&p.bltime,
+			&p.bltabel,
+			&p.blbuch,
+			&p.blpers,
 		)
-		if err2 != nil {
-			fmt.Println("ошибка распаковки строки monds в show")
+		if err != nil {
+			fmt.Println("ошибка распаковки строки show")
 			panic(err)
-		} else {
-			_monatHtml.Yahre = strconv.Itoa(_monatrow.Yahre)
-			_monatHtml.Monat = _monatrow.Monat
-			_monatHtml.Nummonat = strconv.Itoa(_monatrow.Nummonat)
-			_monatHtml.Tag = strconv.Itoa(_monatrow.Tag)
-			_monatHtml.Hour = strconv.Itoa(_monatrow.Hour)
-			_monatHtml.Kf = strconv.Itoa(_monatrow.Kf)
-			_monatHtml.Blockmonat = strconv.Itoa(_monatrow.Blockmonat)
-			_monatHtml.Nalog = strconv.Itoa(_monatrow.Nalog)
-			_monatHtml.Blockpersonal = strconv.Itoa(_monatrow.Blockpersonal)
-			_monatHtml.Blocktimetabel = strconv.Itoa(_monatrow.Blocktimetabel)
-			_monatHtml.Blocktabel = strconv.Itoa(_monatrow.Blocktabel)
-			_monatHtml.Blockbuchtabel = strconv.Itoa(_monatrow.Blockbuchtabel)
-			_monatHtml.Timestamp = strconv.Itoa(_monatrow.Timestamp)
-			_monatHtml.Id = strconv.Itoa(_monatrow.Id)
-		}
-		err = t.ExecuteTemplate(w, "base", _monatHtml)
+		} // подготовка HTML
+		var monatlhtml monat
+		monatlhtml.Yahre = strconv.Itoa(p.yahre)
+		monatlhtml.Nummonat = strconv.Itoa(p.nummonat)
+		monatlhtml.Tag = strconv.Itoa(p.tag)
+		monatlhtml.Hour = strconv.Itoa(p.hour) // int ---> string for HTML
+		monatlhtml.Kf = strconv.Itoa(p.kf)
+		monatlhtml.Blmond = strconv.Itoa(p.blmond)
+		monatlhtml.Bltime = strconv.Itoa(p.bltime)
+		monatlhtml.Bltabel = strconv.Itoa(p.bltabel)
+		monatlhtml.Blbuch = strconv.Itoa(p.blbuch)
+		monatlhtml.Blpers = strconv.Itoa(p.blpers)
+		// проверка корректности ввода
+		monatlhtml.Ready = "1"    // "1" - ввод корректен
+		monatlhtml.Errors = "0"   // "1" - ошибка при вводе полей
+		monatlhtml.Empty = "0"    // "1" - остались пустые поля
+		monatlhtml.ErrRange = "0" // "1" - выход за пределы диапазона
+
+		err = t.ExecuteTemplate(w, "base", monatlhtml)
 		if err != nil {
 			log.Println(err.Error())
-			http.Error(w, "Internal Server Execute Error", http.StatusInternalServerError)
+			http.Error(w, "Internal Server Execute Error Showhandler", http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
-func MondEditHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+// новая запись формы personal в базу personaldb
+func Newhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
-		var _monatHtml monatHtml
-		var _monatrow monatrow
-
-		files := append(partials, "./static/mond_edit.html")
-		t, err := template.ParseFiles(files...) // Parse template file.
-		if err != nil {
-			log.Println(err.Error())
-			http.Error(w, "Mond Internal Server ParseFiles Error", http.StatusInternalServerError)
-			return
-		}
-
-		monat := req.URL.Query().Get("monat")
-		fmt.Println("monat = ", monat)
-		row := db.QueryRow("SELECT * FROM monds WHERE monat=$2", monat) // выборка строки
-		//if err1 != nil {
-		//	fmt.Println("ошибка чтения из базы ")
-		//	panic(err)
-		//}
-		err = row.Scan(&_monatrow.Yahre, // чтение переменных из полей
-			&_monatrow.Monat,
-			&_monatrow.Nummonat,
-			&_monatrow.Tag,
-			&_monatrow.Hour,
-			&_monatrow.Kf,
-			&_monatrow.Blockmonat,
-			&_monatrow.Nalog,
-			&_monatrow.Blockpersonal,
-			&_monatrow.Blocktimetabel,
-			&_monatrow.Blocktabel,
-			&_monatrow.Blockbuchtabel,
-			&_monatrow.Id,
-			&_monatrow.Timestamp,
-		)
-		if err != nil {
-			fmt.Println("ошибка распаковки строки monds в edit")
-			panic(err)
-		} else {
-			_monatHtml.Yahre = strconv.Itoa(_monatrow.Yahre)
-			_monatHtml.Monat = _monatrow.Monat
-			_monatHtml.Nummonat = strconv.Itoa(_monatrow.Nummonat)
-			_monatHtml.Tag = strconv.Itoa(_monatrow.Tag)
-			_monatHtml.Hour = strconv.Itoa(_monatrow.Hour)
-			_monatHtml.Kf = strconv.Itoa(_monatrow.Kf)
-			_monatHtml.Blockmonat = strconv.Itoa(_monatrow.Blockmonat)
-			_monatHtml.Nalog = strconv.Itoa(_monatrow.Nalog)
-			_monatHtml.Blockpersonal = strconv.Itoa(_monatrow.Blockpersonal)
-			_monatHtml.Blocktimetabel = strconv.Itoa(_monatrow.Blocktimetabel)
-			_monatHtml.Blocktabel = strconv.Itoa(_monatrow.Blocktabel)
-			_monatHtml.Blockbuchtabel = strconv.Itoa(_monatrow.Blockbuchtabel)
-			_monatHtml.Timestamp = strconv.Itoa(_monatrow.Timestamp)
-			_monatHtml.Id = strconv.Itoa(_monatrow.Id)
-
-			if req.Method == "POST" {
-				_monatHtml.Ready = "0"  // 1 - ввод успешный
-				_monatHtml.Errors = "0" // 1 - ошибки при вводе
-				_monatHtml.Empty = "0"  // 1 - есть пустые поля
-				_monatHtml.Range = "0"  // 1 - выход за пределы диапазона
-				req.ParseForm()
-				_monatHtml.Yahre = req.Form["yahre"][0]
-				_monatHtml.Monat = req.Form["monat"][0]
-				_monatHtml.Nummonat = req.Form["num_monat"][0]
-				_monatHtml.Tag = req.Form["tag"][0]
-				_monatHtml.Hour = req.Form["hour"][0]
-				_monatHtml.Kf = req.Form["kf_oberhour"][0]
-				_monatHtml.Nalog = req.Form["nalog"][0]
-				//_monatHtml.Blockmonat		= req.Form["block_monat"][0]
-				//_monatHtml.Blockpersonal 	= req.Form["block_personal"][0]
-				//_monatHtml.Blocktimetabel 	= req.Form["block_timetabel"][0]
-				//_monatHtml.Blocktabel 		= req.Form["block_tabel"][0]
-				//_monatHtml.Blockbuchtabel 	= req.Form["block_buchtabel"][0]
-				err := 0
-				err = err + checknum(_monatHtml.Yahre, 2040, 2021)
-				err = err + checknum(_monatHtml.Monat, 12, 1)
-				err = err + checknum(_monatHtml.Tag, 30, 1)
-				err = err + checknum(_monatHtml.Hour, 176, 8)
-				err = err + checknum(_monatHtml.Kf, 3, 1)
-				err = err + checknum(_monatHtml.Nalog, 40, 13)
-				if err > 0 {
-					_monatHtml.Range = "1"
-					_monatHtml.Errors = "1"
-				}
-				if _monatHtml.Yahre == "" || _monatHtml.Monat == "" || _monatHtml.Nummonat == "" || _monatHtml.Tag == "" || _monatHtml.Hour == "" || _monatHtml.Kf == "" || _monatHtml.Nalog == "" {
-					_monatHtml.Empty = "1"
-					_monatHtml.Errors = "1"
-				}
-				if _monatHtml.Errors == "0" {
-					_monatHtml.Ready = "1"
-				}
-				//addMonat(_monatHtml) //добавление записи в базу
-				// запись в базу
-				_, err1 := db.Exec("delete from monds where monat = $2", monat)
-				if err1 != nil { // удаление старой записи
-					panic(err)
-				}
-				yahre, _ := strconv.Atoi(_monatHtml.Yahre)
-				_monat := _monatHtml.Monat
-				numMonat, _ := strconv.Atoi(_monatHtml.Nummonat)
-				hour, _ := strconv.Atoi(_monatHtml.Hour)
-				tag, _ := strconv.Atoi(_monatHtml.Tag)
-				kfOberhour, _ := strconv.Atoi(_monatHtml.Kf)
-				nalog, _ := strconv.Atoi(_monatHtml.Nalog)
-				blockMonat := 0
-				blockPersonal := 0
-				blockTimetabel := 0
-				blockTabel := 0
-				blockBuchtabel := 0
-
-				_, err2 := db.Exec("INSERT INTO monds VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
-					yahre,
-					_monat,
-					numMonat,
-					tag,
-					hour,
-					kfOberhour,
-					blockMonat,
-					nalog,
-					blockPersonal,
-					blockTimetabel,
-					blockTabel,
-					blockBuchtabel,
-				)
-				if err2 != nil {
-					fmt.Println("Ошибка записи измененной строки в monds")
-				}
-			}
-
-			err = t.ExecuteTemplate(w, "base", _monatHtml)
-			if err != nil {
-				log.Println(err.Error())
-				http.Error(w, "Internal Server Execute Error", http.StatusInternalServerError)
-				return
-			}
-		}
-	}
-}
-
-func MondNewHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
-	return func(w http.ResponseWriter, req *http.Request) {
-		var _monatHtml monatHtml
 
 		files := append(partials, "./static/mond_new.html")
 		t, err := template.ParseFiles(files...) // Parse template file.
+
 		if err != nil {
 			log.Println(err.Error())
-			http.Error(w, "Mond Internal Server ParseFiles Error", http.StatusInternalServerError)
+			http.Error(w, "Internal Server ParseFiles Error personalNewhandler", http.StatusInternalServerError)
 			return
 		}
+		var monathtml monat
+		monathtml.Ready = "0"    // 1 - ввод успешный
+		monathtml.Errors = "0"   // 1 - ошибки при вводе
+		monathtml.ErrRange = "0" // 1 - выход за пределы диапазона
+
 		if req.Method == "POST" {
-			_monatHtml.Ready = "0"  // 1 - ввод успешный
-			_monatHtml.Errors = "0" // 1 - ошибки при вводе
-			_monatHtml.Empty = "0"  // 1 - есть пустые поля
-			_monatHtml.Range = "0"  // 1 - выход за пределы диапазона
 			req.ParseForm()
-			_monatHtml.Yahre = req.Form["yahre"][0]
-			_monatHtml.Monat = req.Form["monat"][0]
-			_monatHtml.Nummonat = req.Form["nummonat"][0]
-			_monatHtml.Tag = req.Form["tag"][0]
-			_monatHtml.Hour = req.Form["hour"][0]
-			_monatHtml.Kf = req.Form["kf"][0]
-			_monatHtml.Nalog = req.Form["nalog"][0]
-			//_monatHtml.Blockmonat 		= req.Form["blockmonat"][0]
-			//_monatHtml.Blockpersonal 	= req.Form["blockpersonal"][0]
-			//_monatHtml.Blocktimetabel 	= req.Form["blocktimetabel"][0]
-			//_monatHtml.Blocktabel 		= req.Form["blocktabel"][0]
-			//_monatHtml.Blockbuchtabel 	= req.Form["blockbuchtabel"][0]
-			err := 0
-			err = err + checknum(_monatHtml.Yahre, 2040, 2021)
-			err = err + checknum(_monatHtml.Nummonat, 12, 1)
-			err = err + checknum(_monatHtml.Tag, 30, 1)
-			err = err + checknum(_monatHtml.Hour, 176, 8)
-			err = err + checknum(_monatHtml.Kf, 3, 1)
-			err = err + checknum(_monatHtml.Nalog, 40, 10)
-			if err > 0 {
-				_monatHtml.Range = "1"
-				_monatHtml.Errors = "1"
+			//makeReadyHtml(&personalhtml) // подготовка значений для web
+			//readFromHtml(&personalhtml, req)  	// ввод значений из web
+			monathtml.Ready = "0" // 1 - ввод успешный
+			monathtml.Errors = "0"
+
+			monathtml.Yahre = req.Form["yahre"][0]
+			if checknum(monathtml.Yahre, 2021, 2031) != 0 {
+				monathtml.Yahre = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
 			}
-			if _monatHtml.Yahre == "" || _monatHtml.Monat == "" || _monatHtml.Tag == "" || _monatHtml.Hour == "" || _monatHtml.Kf == "" || _monatHtml.Nalog == "" {
-				_monatHtml.Empty = "1"
-				_monatHtml.Errors = "1"
+			monathtml.Nummonat = req.Form["nummonat"][0]
+			if checknum(monathtml.Nummonat, 0, 12) != 0 {
+				monathtml.Nummonat = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
 			}
-			if _monatHtml.Errors == "0" {
-				_monatHtml.Ready = "1"
+			monathtml.Tag = req.Form["tag"][0]
+			if checknum(monathtml.Tag, 10, 24) != 0 {
+				monathtml.Tag = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
 			}
-			//addMonat(_monatHtml) //добавление записи в базу
-			// запись в базу
-			// запись в базу
-			//monat := _monatHtml.Monat
-			//_, err1 := db.Exec("delete from monds where monat = $2", monat)
-			//if err1 != nil { // удаление старой записи
-			//	fmt.Println("Ошибка удаления старой строки в monds")
-			//	panic(err)
-			//}
-			//yahre, _ 		:= strconv.Atoi(_monatHtml.Yahre)
-			//_monat 		:= _monatHtml.Monat
-			//numMonat, _ 	:= strconv.Atoi(_monatHtml.Nummonat)
-			//hour, _ 		:= strconv.Atoi(_monatHtml.Hour)
-			//tag, _ 		:= strconv.Atoi(_monatHtml.Tag)
-			//kfOberhour, _ := strconv.Atoi(_monatHtml.Kf)
-			//nalog, _      := strconv.Atoi(_monatHtml.Nalog)
-			yahre := 2021
-			_monat := "zyd"
-			numMonat := 1
-			hour := 168
-			tag := 21
-			kfOberhour := 2
-			nalog := 13
-			blockMonat := 0
-			blockPersonal := 0
-			blockTimetabel := 0
-			blockTabel := 0
-			blockBuchtabel := 0
-			fmt.Println("befor record  row in new monds")
-			_, err2 := db.Exec("INSERT INTO monds VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)",
-				yahre,
-				_monat,
-				numMonat,
-				tag,
-				hour,
-				kfOberhour,
-				blockMonat,
-				nalog,
-				blockPersonal,
-				blockTimetabel,
-				blockTabel,
-				blockBuchtabel,
-			)
-			if err2 != nil {
-				fmt.Println("Ошибка записи новой строки в monds")
+			monathtml.Hour = req.Form["hour"][0]
+			if checknum(monathtml.Hour, 50, 180) != 0 {
+				monathtml.Hour = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			monathtml.Kf = req.Form["kf"][0]
+			if checknum(monathtml.Kf, 1, 2) != 0 {
+				monathtml.Kf = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			monathtml.Blmond = req.Form["blmond"][0]
+			if checknum(monathtml.Blmond, 0, 1) != 0 {
+				monathtml.Blmond = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			monathtml.Bltime = req.Form["bltime"][0]
+			if checknum(monathtml.Bltime, 0, 1) != 0 {
+				monathtml.Bltime = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			monathtml.Bltabel = req.Form["bltabel"][0]
+			if checknum(monathtml.Bltabel, 0, 1) != 0 {
+				monathtml.Bltabel = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			monathtml.Blbuch = req.Form["blbuch"][0]
+			if checknum(monathtml.Blbuch, 0, 1) != 0 {
+				monathtml.Blbuch = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			monathtml.Blpers = req.Form["blpers"][0]
+			if checknum(monathtml.Blpers, 0, 1) != 0 {
+				monathtml.Blpers = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			if monathtml.Errors == "0" {
+				monathtml.Ready = "1"
+				//добавление записи в базу
+				nummonat := monathtml.Nummonat
+				// удаление старой записи
+				row := db.QueryRow("SELECT * FROM monds WHERE nummonat=$2", nummonat)
+				if row != nil { // если запись есть удаляем
+					_, err1 := db.Exec("DELETE FROM monds WHERE nummonat = $2", nummonat)
+					if err1 != nil {
+						fmt.Println("Ошибка при удалении старой записи в monds nummonat = ", nummonat)
+						panic(err)
+					}
+				}
+				var p frombase
+				p.yahre, _ = strconv.Atoi(monathtml.Yahre)
+				p.nummonat, _ = strconv.Atoi(monathtml.Nummonat)
+				p.tag, _ = strconv.Atoi(monathtml.Tag)
+				p.hour, _ = strconv.Atoi(monathtml.Hour) // перевод в int для базы
+				p.kf, _ = strconv.Atoi(monathtml.Kf)     // перевод в int для базы
+				p.blmond, _ = strconv.Atoi(monathtml.Blmond)
+				p.bltime, _ = strconv.Atoi(monathtml.Bltime)
+				p.bltabel, _ = strconv.Atoi(monathtml.Bltabel)
+				p.blbuch, _ = strconv.Atoi(monathtml.Blbuch)
+				p.blpers, _ = strconv.Atoi(monathtml.Blpers)
+
+				sqlStatement := `INSERT INTO monds (yahre,nummonat,tag,hour,kf,blmond,bltime,bltabel,blbuch,blpers) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`
+				_, err2 := db.Exec(sqlStatement,
+					&p.yahre,
+					&p.nummonat,
+					&p.tag,
+					&p.hour,
+					&p.kf,
+					&p.blmond,
+					&p.bltime,
+					&p.bltabel,
+					&p.blbuch,
+					&p.blpers,
+				)
+				if err2 != nil {
+					fmt.Println("Ошибка записи новой строки в mondNew")
+					panic(err2)
+				}
 			}
 		}
-		err1 := t.ExecuteTemplate(w, "base", _monatHtml)
-		if err1 != nil {
+		err = t.ExecuteTemplate(w, "base", monathtml)
+		if err != nil {
+			log.Println(err.Error())
+			http.Error(w, "Newmond Internal Server Execute Error", http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+// редактирование формы personal и замена в базе personaldb
+func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
+
+		files := append(partials, "./static/personal_edit.html")
+		t, err := template.ParseFiles(files...) // Parse template file.
+		if err != nil {
+			log.Println(err.Error())
+			http.Error(w, "Internal Server ParseFiles Error", http.StatusInternalServerError)
+			return
+		}
+
+		nummonat := req.URL.Query().Get("nummonat")
+		num, _ := strconv.Atoi(nummonat)
+		row := db.QueryRow("SELECT * FROM monds WHERE nummonat=$2", num)
+
+		var p frombase
+		err = row.Scan( // чтение строки из таблицы
+			&p.id,
+			&p.yahre,
+			&p.nummonat,
+			&p.tag,
+			&p.hour,
+			&p.kf,
+			&p.blmond,
+			&p.bltime,
+			&p.bltabel,
+			&p.blbuch,
+			&p.blpers,
+		)
+		if err != nil {
+			fmt.Println("ошибка распаковки строки show")
+			panic(err)
+		}
+		// подготовка HTML
+		var monathtml monat
+		monathtml.Empty = "1"
+		monathtml.Ready = "0"    // "1" - ввод корректен
+		monathtml.Errors = "0"   // "1" - ошибка при вводе полей
+		monathtml.ErrRange = "0" // "1" - выход за пределы диапазона
+		monathtml.Yahre = strconv.Itoa(p.yahre)
+		monathtml.Nummonat = strconv.Itoa(p.nummonat)
+		monathtml.Tag = strconv.Itoa(p.tag)
+		monathtml.Hour = strconv.Itoa(p.hour) // int ---> string for HTML
+		monathtml.Kf = strconv.Itoa(p.kf)
+		monathtml.Blmond = strconv.Itoa(p.blmond)
+		monathtml.Bltime = strconv.Itoa(p.bltime)
+		monathtml.Bltabel = strconv.Itoa(p.bltabel)
+		monathtml.Blbuch = strconv.Itoa(p.blbuch)
+		monathtml.Blpers = strconv.Itoa(p.blpers)
+		// проверка корректности ввода
+
+		if req.Method == "POST" {
+			req.ParseForm()
+			monathtml.Ready = "0"  // "1" - ввод корректен
+			monathtml.Errors = "0" // "1" - ошибка при вводе полей
+			//makeReadyHtml(&personalhtml) // подготовка значений для web
+			//readFromHtml(&personalhtml, req)  	// ввод значений из web
+			monathtml.Yahre = req.Form["yahre"][0]
+			if checknum(monathtml.Yahre, 2021, 2031) != 0 {
+				monathtml.Yahre = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			monathtml.Nummonat = req.Form["nummonat"][0]
+			if checknum(monathtml.Nummonat, 0, 12) != 0 {
+				monathtml.Nummonat = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			monathtml.Tag = req.Form["tag"][0]
+			if checknum(monathtml.Tag, 10, 24) != 0 {
+				monathtml.Tag = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			monathtml.Hour = req.Form["hour"][0]
+			if checknum(monathtml.Hour, 50, 180) != 0 {
+				monathtml.Hour = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			monathtml.Kf = req.Form["kf"][0]
+			if checknum(monathtml.Kf, 1, 2) != 0 {
+				monathtml.Kf = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			monathtml.Blmond = req.Form["blmond"][0]
+			if checknum(monathtml.Blmond, 0, 1) != 0 {
+				monathtml.Blmond = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			monathtml.Bltime = req.Form["bltime"][0]
+			if checknum(monathtml.Bltime, 0, 1) != 0 {
+				monathtml.Bltime = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			monathtml.Bltabel = req.Form["bltabel"][0]
+			if checknum(monathtml.Bltabel, 0, 1) != 0 {
+				monathtml.Bltabel = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			monathtml.Blbuch = req.Form["blbuch"][0]
+			if checknum(monathtml.Blbuch, 0, 1) != 0 {
+				monathtml.Blbuch = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+			}
+			monathtml.Blpers = req.Form["blpers"][0]
+			if checknum(monathtml.Blpers, 0, 1) != 0 {
+				monathtml.Blpers = "???"
+				monathtml.ErrRange = "1"
+				monathtml.Errors = "1"
+
+			}
+			if monathtml.Errors == "0" {
+				monathtml.Ready = "1"
+				monathtml.Empty = "0"
+				//удаление старой записи в базе
+
+				// удаление старой записи
+				row := db.QueryRow("SELECT * FROM monds WHERE nummonat=$2", num)
+				if row != nil { // если запись есть удаляем
+					_, err1 := db.Exec("DELETE FROM monds WHERE nummonat = $2", num)
+					if err1 != nil {
+						fmt.Println("Ошибка при удалении старой записи в monds nummonat = ", num)
+						panic(err)
+					}
+				}
+				//добавление записи в базу
+				var p frombase
+				p.yahre, _ = strconv.Atoi(monathtml.Yahre)
+				p.nummonat, _ = strconv.Atoi(monathtml.Nummonat)
+				p.tag, _ = strconv.Atoi(monathtml.Tag)
+				p.hour, _ = strconv.Atoi(monathtml.Hour) // перевод в int для базы
+				p.kf, _ = strconv.Atoi(monathtml.Kf)     // перевод в int для базы
+				p.blmond, _ = strconv.Atoi(monathtml.Blmond)
+				p.bltime, _ = strconv.Atoi(monathtml.Bltime)
+				p.bltabel, _ = strconv.Atoi(monathtml.Bltabel)
+				p.blbuch, _ = strconv.Atoi(monathtml.Blbuch)
+				p.blpers, _ = strconv.Atoi(monathtml.Blpers)
+
+				sqlStatement := `INSERT INTO monds (yahre,nummonat,tag,hour,kf,blmond,bltime,bltabel,blbuch,blpers) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`
+				_, err2 := db.Exec(sqlStatement,
+					&p.yahre,
+					&p.nummonat,
+					&p.tag,
+					&p.hour,
+					&p.kf,
+					&p.blmond,
+					&p.bltime,
+					&p.bltabel,
+					&p.blbuch,
+					&p.blpers,
+				)
+				if err2 != nil {
+					fmt.Println("Ошибка записи новой строки в mondNew")
+					panic(err2)
+				}
+			}
+		}
+		err = t.ExecuteTemplate(w, "base", monathtml)
+		if err != nil {
 			log.Println(err.Error())
 			http.Error(w, "Internal Server Execute Error", http.StatusInternalServerError)
 			return
 		}
 	}
+
 }

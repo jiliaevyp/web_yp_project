@@ -311,32 +311,70 @@ func PersonalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reques
 			req.ParseForm()
 			makeReadyHtml(&personalhtml) // подготовка значений для web
 			//readFromHtml(&personalhtml, req)  	// ввод значений из web
-			personalhtml.Title = req.Form["title"][0]
-			personalhtml.Forename = req.Form["forename"][0]
-			personalhtml.Kadr = req.Form["kadr"][0]
-			personalhtml.Tarif = req.Form["tarif"][0]
-			personalhtml.Numotdel = req.Form["numotdel"][0]
-			personalhtml.Email = req.Form["email"][0]
-			personalhtml.Phone = req.Form["phone"][0]
-			personalhtml.Address = req.Form["address"][0]
+			personalhtml.Errors = "0"
+			personalhtml.Ready = "0"
 
-			// проверка введенных данных
-			if checkNumer(&personalhtml) == 0 {
-				personalhtml.Errors = "0" // ввод корректный
-				personalhtml.Ready = "1"
-				//добавление записи в базу
-				title := personalhtml.Title
-				// удаление старой записи
-				row := db.QueryRow("SELECT * FROM personals WHERE title=$1", title)
-				if row != nil { // если запись есть удаляем
-					_, err1 := db.Exec("DELETE FROM personals WHERE title = $1", title)
-					if err1 != nil {
-						fmt.Println("Ошибка при удалении старой записи в personals title = ", title)
-						panic(err)
-					}
+			personalhtml.Forename = req.Form["forename"][0]
+			// проверка на пустые поля данных
+			if personalhtml.Forename == "" || personalhtml.Forename == "???" {
+				personalhtml.Forename = "???"
+				personalhtml.Empty = "1"
+				personalhtml.Errors = "1"
+			}
+			personalhtml.Kadr = req.Form["kadr"][0]
+			if personalhtml.Kadr == "" || personalhtml.Kadr == "???" {
+				personalhtml.Kadr = "???"
+				personalhtml.Empty = "1"
+				personalhtml.Errors = "1"
+			}
+			personalhtml.Address = req.Form["address"][0]
+			if personalhtml.Address == "" || personalhtml.Address == "???" {
+				personalhtml.Address = "???"
+				personalhtml.Empty = "1"
+				personalhtml.Errors = "1"
+			}
+			// ввод и проверка на числа
+			personalhtml.Tarif = req.Form["tarif"][0]
+			if checknum(personalhtml.Tarif, 10, 1000) != 0 {
+				personalhtml.Tarif = "???"
+				personalhtml.ErrRange = "1"
+				personalhtml.ErrTarif = "1"
+				personalhtml.Errors = "1"
+			}
+			personalhtml.Numotdel = req.Form["numotdel"][0]
+			if checknum(personalhtml.Numotdel, 0, 20) != 0 {
+				personalhtml.Numotdel = "???"
+				personalhtml.ErrRange = "1"
+				personalhtml.ErrNumotd = "1"
+				personalhtml.Errors = "1"
+			}
+			personalhtml.Email = req.Form["email"][0]
+			var errmail int
+			if personalhtml.Email != "" && personalhtml.Email != "???" {
+				errmail, personalhtml.Email, _ = inpMailAddress(personalhtml.Title + "<" + personalhtml.Email + ">") // проверка email адреса
+				if errmail > 0 {
+					personalhtml.Email = "???"
+					personalhtml.ErrEmail = "1"
+					personalhtml.Errors = "1"
 				}
+			} else {
+				personalhtml.Email = "???"
+				personalhtml.ErrEmail = "1"
+				personalhtml.Errors = "1"
+			}
+
+			personalhtml.Phone = req.Form["phone"][0]
+			_, err1 := libphonenumber.Parse(personalhtml.Phone, "RU")
+			if err1 != nil {
+				personalhtml.Phone = "???"
+				personalhtml.ErrPhone = "1"
+				personalhtml.Errors = "1"
+			}
+
+			if personalhtml.Errors == "0" {
+				personalhtml.Ready = "1"
 				var p frombase
-				p.title = personalhtml.Title
+				p.title = personalhtml.Title //personalhtml.Title
 				p.forename = personalhtml.Forename
 				p.kadr = personalhtml.Kadr
 				p.tarif, _ = strconv.Atoi(personalhtml.Tarif)       // перевод в int для базы
@@ -344,9 +382,14 @@ func PersonalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reques
 				p.email = personalhtml.Email
 				p.phone = personalhtml.Phone
 				p.address = personalhtml.Address
-
+				title := personalhtml.Title
+				_, err := db.Exec("DELETE FROM personals WHERE title = $1", title) // удаление  записи по считанному title
+				if err != nil {
+					fmt.Println("Ошибка при удалении старой записи title=", title)
+					panic(err)
+				}
 				sqlStatement := `INSERT INTO personals (title, forename, kadr,numotdel,tarif,email,phone,address) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`
-				_, err2 := db.Exec(sqlStatement,
+				_, err = db.Exec(sqlStatement,
 					p.title,
 					p.forename,
 					p.kadr,
@@ -356,10 +399,13 @@ func PersonalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reques
 					p.phone,
 					p.address,
 				)
-				if err2 != nil {
-					fmt.Println("Ошибка записи новой строки в personalNew")
-					panic(err2)
+				if err != nil {
+					fmt.Println("Ошибка записи измененной строки в personals", "title=", p.title)
+					panic(err)
+				} else {
+					fmt.Println("успешно записали edit title=", p.title)
 				}
+
 			}
 		}
 		err = t.ExecuteTemplate(w, "base", personalhtml)
@@ -420,6 +466,7 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 				// ввод новых данных
 				personalhtml.Errors = "0"
 				personalhtml.Ready = "0"
+
 				personalhtml.Forename = req.Form["forename"][0]
 				// проверка на пустые поля данных
 				if personalhtml.Forename == "" || personalhtml.Forename == "???" {

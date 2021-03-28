@@ -70,10 +70,10 @@ func inpMailAddress(nameAddress string) (err int, email string, title string) {
 func Server(addrWeb string, db *sql.DB) {
 	http.HandleFunc("/", indexHandler)
 
-	http.Handle("/mond_index", http.HandlerFunc(mond.MondIndexHandler(db)))
-	http.Handle("/mond_new", http.HandlerFunc(mond.MondNewHandler(db)))
-	http.Handle("/mond_show", http.HandlerFunc(mond.MondShowHandler(db)))
-	http.Handle("/mond_edit", http.HandlerFunc(mond.MondEditHandler(db)))
+	http.Handle("/mond_index", http.HandlerFunc(mond.Indexhandler(db)))
+	http.Handle("/mond_new", http.HandlerFunc(mond.Newhandler(db)))
+	http.Handle("/mond_show", http.HandlerFunc(mond.Showhandler(db)))
+	http.Handle("/mond_edit", http.HandlerFunc(mond.Edithandler(db)))
 
 	http.Handle("/personals_index", http.HandlerFunc(personals.Personalshandler(db)))
 	http.Handle("/personal_new", http.HandlerFunc(personals.PersonalNewhandler(db)))
