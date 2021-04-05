@@ -9,10 +9,11 @@
         <tr>
             <th align="center">№</th>
             <th align="center">Год</th>
-            <th align="center">Номер месяца</th>
-            <th align="center">Рабочих дней</th>
-            <th align="center">Рабочих часо </th>
-            <th align="center">Коэф.сверхурочных</th>
+            <th align="center">Месяц</th>
+            <th align="center">Номер</th>
+            <th align="center">Раб дней</th>
+            <th align="center">Раб часов </th>
+            <th align="center">Коэф.сверхур</th>
             <th align="center">Удалить</th>
         </thead>
         <tbody>
@@ -20,11 +21,12 @@
         <tr class="<%= cycle('list_line_odd', 'list_line_even') %>">
             <td align="center">{{ 1}}</td>
             <td align="center">{{ .Yahre}}</td>
-            <td align="center">{{ .Nummonat}}</td>
+            <td align="left"><a href= "mond_show?id={{ $value.Id}}" >{{ .Monat}}</td>
+            <td align="center">{{ $value.Nummonat}}</td>
             <td align="center">{{ .Tag}}</td>
             <td align="center">{{ .Hour}}</td>
             <td align="center">{{ .Kf}}</td>
-            <td><a href= "/mond_index?del=del&nummonat={{ $value.Nummonat}}">Удалить</a></td>
+            <td><a href= "/monds_index?del=del&id={{ $value.Id}}">Удалить</a></td>
         </tr>
         {{end}}
         </tbody>

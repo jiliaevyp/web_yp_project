@@ -26,7 +26,7 @@ var partials = []string{
 	"./static/mond_new.html",
 	"./static/mond_show.html",
 	"./static/mond_edit.html",
-	"./static/mond_index.html",
+	"./static/monds_index.html",
 	"./static/personal_new.html",
 	"./static/personal_show.html",
 	"./static/personal_edit.html",
@@ -70,7 +70,7 @@ func inpMailAddress(nameAddress string) (err int, email string, title string) {
 func Server(addrWeb string, db *sql.DB) {
 	http.HandleFunc("/", indexHandler)
 
-	http.Handle("/mond_index", http.HandlerFunc(mond.Indexhandler(db)))
+	http.Handle("/monds_index", http.HandlerFunc(mond.Indexhandler(db)))
 	http.Handle("/mond_new", http.HandlerFunc(mond.Newhandler(db)))
 	http.Handle("/mond_show", http.HandlerFunc(mond.Showhandler(db)))
 	http.Handle("/mond_edit", http.HandlerFunc(mond.Edithandler(db)))

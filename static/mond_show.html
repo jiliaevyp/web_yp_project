@@ -1,11 +1,12 @@
 {{ define "content" }}
 <strong>
     <table border="1" style="background-color: #b1f3d8">
-        <caption><h3>Текущий месяц   {{.Nummonat}}  {{.Yahre}}</h3></caption><br>
+        <caption><h3>Текущий месяц   <br>
+            {{.Monat}}  {{.Yahre}}</h3></caption><br>
         <tbody>
-        <tr><td>1</td><td>Рабочих дней</td>      <td align="center"> {{.Tag}}     </td></tr>
-        <tr><td>2</td><td>Рабочих часов</td>     <td align="center"> {{.Hour}}    </td></tr>
-        <tr><td>3</td><td>Коэф. сверхурочных</td><td align="center"> {{.Kf}}</td></tr>
+        <tr><td>1</td><td>Раб дней</td>      <td align="center"> {{.Tag}}     </td></tr>
+        <tr><td>2</td><td>Раб часов</td>     <td align="center"> {{.Hour}}    </td></tr>
+        <tr><td>3</td><td>Коэф. сверхур</td><td align="center"> {{.Kf}}</td></tr>
         <tr><td>3</td><td>Блок месяц</td><td align="center"> {{.Blmond}}</td></tr>
         <tr><td>3</td><td>Блок табель</td><td align="center"> {{.Bltime}}</td></tr>
         <tr><td>3</td><td>Блок начисления</td><td align="center"> {{.Bltabel}}</td></tr>
@@ -14,7 +15,7 @@
         </tbody>
     </table><br>
 </strong>
-<button class="button"> <a href= "/mond_edit?nummonat={{ .Nummonat}}" >Изменить</a></button>
-<button class="button"> <a href= "/mond_index" >Выход</a></button>
+<button class="button"> <a href= "/mond_edit?id={{ .Id}}" >Изменить</a></button>
+<button class="button"> <a href= "/monds_index" >Выход</a></button>
 
 {{end}}

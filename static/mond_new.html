@@ -2,7 +2,7 @@
     {{ if eq .Ready "1"}}
     <strong>
         <table border="1" style="background-color: #b1f3d8">
-        <caption><h3>Текущий месяц   {{.Nummonat}}  {{.Yahre}}</h3></caption><br>
+        <caption><h3>Текущий месяц   {{.Monat}}  {{.Yahre}}</h3></caption><br>
         <tbody>
         <tr><td>1</td><td>Рабочих дней</td>      <td align="center"> {{.Tag}}     </td></tr>
         <tr><td>2</td><td>Рабочих часов</td>     <td align="center"> {{.Hour}}    </td></tr>
@@ -14,13 +14,12 @@
         <tr><td>3</td><td>Блок персонала</td><td align="center"> {{.Blpers}}</td></tr>
         </tbody>
         </table><br>
-        <button class="button"> <a href= "/mond_edit?nummonat={{.Nummonat}}" >Изменить</a></button>
     </strong>
     {{else}}
             {{ if eq .Errors "1" }}
-            <strong>Ввведите числовые значения! </strong><br>
+            <strong>Введите числовые значения! </strong><br>
             {{end}}
-            {{ if eq .Range "1" }}
+            {{ if eq .ErrRange "1" }}
             <strong>Введите числовые значения в рабочем диапазоне! </strong><br>
             {{end}}
         <form method="POST">
@@ -41,8 +40,9 @@
                     </tbody>
                 </table><br>
                 <button class="button"><input type="submit" value="Ввести"></button>
-                <button class="button"> <a href= "/index" >Выход</a></button>
             </strong>
         </form>
     {{end}}
+    <button class="button"> <a href= "/mond_edit?nummonat={{.Nummonat}}" >Изменить</a></button>
+    <button class="button"> <a href= "/monds_index" >Выход</a></button>
 {{end}}

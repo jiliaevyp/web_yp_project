@@ -11,8 +11,8 @@
             <th align="center">Фамилия</th>
             <th align="center">Имя</th>
             <th align="center">Должность</th>
+            <th align="center">Отдел</th>
             <th align="center">Тариф</th>
-            <th align="center">Номер отдела</th>
             <th align="center">E-mail</th>
             <th align="center">Телефон</th>
             <th align="center">Адрес</th>
@@ -22,15 +22,15 @@
         {{ range $key, $value := .Persontable }}
             <tr class="<%= cycle('list_line_odd', 'list_line_even') %>">
                 <td>{{ 1}}</td>
-                <td><a href= "personal_show?title={{ $value.Title}}" >{{ $value.Title}}</td>
+                <td><a href= "personal_show?id={{ $value.Id}}" >{{ $value.Title}}</td>
                 <td>{{ $value.Forename }}</td>
                 <td>{{ $value.Kadr}}</td>
+                <td align="left">{{ $value.Department}}</td>
                 <td align="right">{{ $value.Tarif}}</td>
-                <td align="center">{{ $value.Numotdel}}</td>
-                <td>{{ $value.Email}}</td>
-                <td>{{ $value.Phone}}</td>
-                <td>{{ $value.Address}}</td>
-                <td><a href= "/personals_index?del=del&title={{ $value.Title}}">Удалить</a></td>
+                <td align="left">{{ $value.Email}}</td>
+                <td align="left">{{ $value.Phone}}</td>
+                <td align="left">{{ $value.Address}}</td>
+                <td><a href= "/personals_index?del=del&id={{ $value.Id}}">Удалить</a></td>
             </tr>
         {{end}}
         </tbody>
