@@ -2,6 +2,7 @@
     {{ if eq .Ready "1"}}
     <strong>
     <table border="1" style="background-color: #b1f3d8">
+        <h2>{{ .Jetzmonat}}   {{ .Jetzyahre}}</h2>
         <caption><h3>Данные по сотруднику</h3></caption><br>
         <thead>
         <th> №</th><th>Наименование</th><th>Значение</th>
@@ -44,14 +45,30 @@
             <th> №</th><th>Наименование</th><th>Значение</th>
             </thead>
             <tbody>
-            <tr><td>2</td><td>Фамилия</td>   <td align="left"><input value=  {{.Title}} name="title"> </td></tr>
-            <tr><td>1</td><td>Имя</td>       <td align="center"><input value= {{.Forename}} name="forename"></td></tr>
-            <tr><td>3</td><td>Должность</td> <td align="center"><input value= {{.Kadr}}     name="kadr"></td></tr>
-            <tr><td>4</td><td>Номер отдела</td><td align="center"><input value= {{.Numotdel}}    name="numotdel"></td></tr>
-            <tr><td>3</td><td>Тариф</td>     <td align="center"><input value= {{.Tarif}}    name="tarif"></td></tr>
-            <tr><td>5</td><td>Е-майл</td>    <td align="center"><input value= {{.Email}}    name="email"></td></tr>
-            <tr><td>6</td><td>Телефон</td>   <td align="center"><input value= {{.Phone}}    name="phone"></td></tr>
-            <tr><td>7</td><td>Адрес</td>     <td align="center"><input value= {{.Address}}  name="address"></td></tr>
+            <tr><td>1</td><td>Фамилия</td>      <td align="center"><input name="title" value= {{.Title}} autocomplete="on"></td></tr>
+            <tr><td>2</td><td>Имя</td>          <td align="center"><input name="forename" value= {{.Forename}} autocomplete="on"></td></tr>
+            <tr><td>3</td><td>Должность</td>    <td align="center"><select size="1" name="kadr" required >
+                <option value={{.Kadr}}>{{.Kadr}}</option>
+                <option value="Инженер">Инженер</option>
+                <option value="Менеджер">Менеджер</option>
+                <option value="Нач.отдела">Нач.отдела</option>
+                <option value="Зам.директора">Зам.директора</option>
+                <option value="Директор">Директор</option>
+            </select></p>
+            </td></tr>
+            <tr><td>4</td><td>Номер отдела</td> <td align="center"><input name="numotdel" value= {{.Numotdel}}></td></tr>
+            <tr><td>3</td><td>Отдел</td>    <td align="center"><select size="1" name="department" value= {{.Department}} required >
+                <option value={{.Department}}>{{.Department}}</option>
+                <option value="Административный">Административный</option>
+                <option value="Бухгалтерия">Бухгалтерия</option>
+                <option value="Коммерческий">Коммерческий</option>
+                <option value="Производственный">Производственный</option>
+                <option value="Конструкторский">Конструкторский</option>
+            </select></p>
+            <tr><td>3</td><td>Тариф</td>        <td align="center"><input type="number" name="tarif" value= {{.Tarif}} min="100" max="500" step="10"></td></tr>
+            <tr><td>5</td><td>Е-майл</td>       <td align="center"><input type="email" name="email" value= {{.Email}} autocomplete="on"></td></tr>
+            <tr><td>6</td><td>Телефон</td>      <td align="center"><input type="phone" name="phone" value= {{.Phone}} autocomplete="on"></td></tr>
+            <tr><td>7</td><td>Адрес</td>        <td align="center"><input name="address" value= {{.Address}} autocomplete="on" ></td></tr>
             </tbody>
         </table><br>
         <button class="submit" align="center"><input type="submit" formaction="/personal_edit?id={{.Id}}" align="center" value="Ввести"></button>

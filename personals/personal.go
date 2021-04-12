@@ -33,7 +33,7 @@ var partials = []string{
 	"./static/tabel_new.html",
 	"./static/tabel_show.html",
 	"./static/tabel_edit.html",
-	"./static/tabel_index.html",
+	"./static/tabels_index.html",
 	"./static/buchtabel_new.html",
 	"./static/buchtabel_show.html",
 	"./static/buchtabel_edit.html",
@@ -62,6 +62,8 @@ type person struct { // данные по сотруднику при вводе
 	Phone      string
 	Address    string
 	Tarif      string // почасовая руб
+	Jetzyahre  string
+	Jetzmonat  string
 	Ready      string // "1" - ввод корректен
 	Errors     string // "1" - ошибка при вводе полей
 	ErrPhone   string // "1"- ошибка при вводе телефона
@@ -89,6 +91,8 @@ type frombase struct { // строка  при чтении/записи из/в
 var (
 	personals struct {
 		Ready       string
+		Jetzyahre   string
+		Jetzmonat   string
 		Persontable []person //person // таблица по сотрудниам  в personals_index.html
 	}
 )
@@ -176,7 +180,7 @@ func checkNumer(personalhtml *person) int {
 }
 
 // просмотр таблицы из personaldb
-func Personalshandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+func Indexhandler(db *sql.DB, jetzYahre int, jetzMonat string) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/personals_index.html")
@@ -241,7 +245,8 @@ func Personalshandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request)
 			personals.Persontable = append(personals.Persontable, personalhtml)
 		}
 		personals.Ready = "1"
-
+		personals.Jetzyahre = strconv.Itoa(jetzYahre)
+		personals.Jetzmonat = jetzMonat
 		err = t.ExecuteTemplate(w, "base", personals)
 		if err != nil {
 			log.Println(err.Error())
@@ -252,7 +257,7 @@ func Personalshandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request)
 }
 
 // просмотр записи из personaldb
-func PersonalShowhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+func Showhandler(db *sql.DB, jetzYahre int, jetzMonat string) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/personal_show.html")
@@ -303,7 +308,8 @@ func PersonalShowhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 		personalhtml.Phone = p.phone
 		personalhtml.Address = p.address
 		personalhtml.Department = p.department
-
+		personalhtml.Jetzyahre = strconv.Itoa(jetzYahre)
+		personalhtml.Jetzmonat = jetzMonat
 		err = t.ExecuteTemplate(w, "base", personalhtml)
 		if err != nil {
 			log.Println(err.Error())
@@ -314,7 +320,7 @@ func PersonalShowhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 }
 
 // новая запись формы personal в базу personaldb
-func PersonalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+func Newhandler(db *sql.DB, jetzYahre int, jetzMonat string) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/personal_new.html")
@@ -453,7 +459,8 @@ func PersonalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reques
 			}
 		}
 		//}
-
+		personalhtml.Jetzyahre = strconv.Itoa(jetzYahre)
+		personalhtml.Jetzmonat = jetzMonat
 		err = t.ExecuteTemplate(w, "base", personalhtml)
 		if err != nil {
 			log.Println(err.Error())
@@ -464,7 +471,7 @@ func PersonalNewhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reques
 }
 
 // редактирование формы personal и замена в базе personaldb
-func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
+func Edithandler(db *sql.DB, jetzYahre int, jetzMonat string) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/personal_edit.html")
@@ -554,10 +561,12 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 					personalhtml.ErrRange = "1"
 					personalhtml.ErrNumotd = "1"
 					personalhtml.Errors = "1"
-				} else {
-					department, _ := strconv.Atoi(personalhtml.Numotdel)
-					personalhtml.Department = Department[department]
 				}
+				personalhtml.Department = req.Form["department"][0]
+				//..else {
+				//	department, _ := strconv.Atoi(personalhtml.Numotdel)
+				//	personalhtml.Department = Department[department]
+				//}
 				personalhtml.Email = req.Form["email"][0]
 				var errmail int
 				if personalhtml.Email != "" && personalhtml.Email != "???" {
@@ -619,6 +628,8 @@ func PersonalEdithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Reque
 					}
 				}
 			}
+			personalhtml.Jetzyahre = strconv.Itoa(jetzYahre)
+			personalhtml.Jetzmonat = jetzMonat
 			err = t.ExecuteTemplate(w, "base", personalhtml)
 			if err != nil {
 				log.Println(err.Error())

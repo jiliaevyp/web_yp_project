@@ -4,18 +4,18 @@
         <caption><h3>Текущий месяц   <br>
             {{.Monat}}  {{.Yahre}}</h3></caption><br>
         <tbody>
-        <tr><td>1</td><td>Раб дней</td>      <td align="center"> {{.Tag}}     </td></tr>
-        <tr><td>2</td><td>Раб часов</td>     <td align="center"> {{.Hour}}    </td></tr>
-        <tr><td>3</td><td>Коэф. сверхур</td><td align="center"> {{.Kf}}</td></tr>
-        <tr><td>3</td><td>Блок месяц</td><td align="center"> {{.Blmond}}</td></tr>
-        <tr><td>3</td><td>Блок табель</td><td align="center"> {{.Bltime}}</td></tr>
-        <tr><td>3</td><td>Блок начисления</td><td align="center"> {{.Bltabel}}</td></tr>
-        <tr><td>3</td><td>Блок ведомость</td><td align="center"> {{.Blbuch}}</td></tr>
-        <tr><td>3</td><td>Блок персонала</td><td align="center"> {{.Blpers}}</td></tr>
+        <tr><td>1</td><td>Раб дней</td>         <td align="center"> {{.Tag}}     </td></tr>
+        <tr><td>2</td><td>Раб часов</td>        <td align="center"> {{.Hour}}    </td></tr>
+        <tr><td>3</td><td>Коэф. сверхур</td>    <td align="center"> {{.Kf}}</td></tr>
+        <tr><td>3</td><td>Блок месяц</td>       <td align="center"> {{.Blmond}}</td></tr>
+        <tr><td>3</td><td>Блок табель</td>      <td align="center"> {{.Bltime}}</td></tr>
+        <tr><td>3</td><td>Блок начисления</td>  <td align="center"> {{.Bltabel}}</td></tr>
+        <tr><td>3</td><td>Блок ведомость</td>   <td align="center"> {{.Blbuch}}</td></tr>
+        <tr><td>3</td><td>Блок персонала</td>   <td align="center"> {{.Blpers}}</td></tr>
         </tbody>
     </table><br>
 </strong>
 <button class="button"> <a href= "/mond_edit?id={{ .Id}}" >Изменить</a></button>
-<button class="button"> <a href= "/monds_index" >Выход</a></button>
-
+<button class="button"> <a href= "/monds_index" >Выход</a></button><br>
+<button class="button"> <a href= "/index?id={{ .Id}}" >Назначить рабочим</a></button>
 {{end}}

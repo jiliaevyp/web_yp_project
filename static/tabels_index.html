@@ -1,0 +1,43 @@
+{{define "content" }}
+<strong>
+    <table border="1" style="background-color: #b1f3d8">
+        <caption>
+            <h3>Табель за месяц год <br>
+                Рабочих дней    Рабочих часов <br>
+                Отдел
+            </h3>
+        </caption>
+        <thead>
+        <tr>
+            <th align="center">№</th>
+            <th align="center">Фамилия</th>
+            <th align="center">Имя</th>
+            <th align="center">Должность</th>
+            <th align="center">Отдел</th>
+            <th align="center">Отработано дней</th>
+            <th align="center">Отработано часов</th>
+            <th align="center">Сверхурочных</th>
+            <th align="center">Удалить</th>
+
+
+        </thead>
+        {{range $key, $value := .Tabelstable}}
+        <tr class="<%= cycle('list_line_odd', 'list_line_even') %>">
+            <td align="center">{{ 1}}</td>
+            <td><a href= "tabel_show?id={{ $value.Id}}" >{{ $value.Title}}</td>
+            <td>{{ $value.Forename }}</td>
+            <td>{{ $value.Kadr}}</td>
+            <td align="left">{{ $value.Department}}</td>
+            <td align="center">{{ $value.Tagemach}}</td>
+            <td align="center">{{ $value.Hourmach}}</td>
+            <td align="center">{{ $value.Oberhour}}</td>
+            <td><a href= "/monds_index?del=del&id={{ $value.Id}}">Удалить</a></td>
+        </tr>
+        {{end}}
+        </tbody>
+    </table><br>
+    </table><br>
+    <button class="button"> <a href= "/tabel_new" >Новый сотрудник</a></button>
+    <button class="button"> <a href= "/index" >Выход</a></button>
+</strong>
+{{end}}

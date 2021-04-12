@@ -1,49 +1,53 @@
 {{ define "content" }}
-{{ if eq .Ready "1"}}
-<strong>
+    {{ if eq .Ready "1"}}
+    <strong>
     <table border="1" style="background-color: #b1f3d8">
         <caption><h3>Данные по сотруднику</h3></caption><br>
         <thead>
         <th> №</th><th>Наименование</th><th>Значение</th>
         </thead>
         <tbody>
-        <tr><td>1</td><td>Имя</td>       <td align="center">   </td></tr>
-        <tr><td>2</td><td>Фамилия</td>   <td align="center">  </td></tr>
-        <tr><td>3</td><td>Должность</td> <td align="center"> </td></tr>
-        <tr><td>3</td><td>Тариф</td>     <td align="center">   </td></tr>
-        <tr><td>4</td><td>Отдел</td>     <td align="center">   </td></tr>
-        <tr><td>5</td><td>Е-майл</td>    <td align="center">  </td></tr>
-        <tr><td>6</td><td>Телефон</td>   <td align="center">   </td></tr>
-        <tr><td>7</td><td>Адрес</td>     <td align="center"> </td></tr>
+        <tr><td>2</td><td>Фамилия</td>   <td align="center"> {{ .Title}} </td></tr>
+        <tr><td>1</td><td>Имя</td>       <td align="center"> {{ .Forename}}   </td></tr>
+        <tr><td>3</td><td>Должность</td> <td align="center"> {{ .Kadr}} </td></tr>
+        <tr><td>4</td><td>Отдел</td>     <td align="center"> {{ .Department}}  </td></tr>
+        <tr><td>3</td><td>Тариф</td>     <td align="center"> {{.Tarif}}   </td></tr>
+        <tr><td>5</td><td>Отработано дней</td>    <td align="center"> {{ .Tagemach}}  </td></tr>
+        <tr><td>6</td><td>Отработано часов</td>   <td align="center"> {{ .Hourmach}}</td></tr>
+        <tr><td>7</td><td>Сверхурочных</td>     <td align="center"> {{ .Oberhour}}</td></tr>
         </tbody>
     </table><br>
     <button class="button"> <a href= "/personal/personal_edit?title={{.Title}}" >Изменить</a></button>
-</strong>
-{{else}}
-{{ if eq .Empty "1" }}
-<strong>Заполните все поля! <br>
+    </strong>
     {{else}}
-        {{ if eq .Errors "1"}}
-            Ошибки при вводе данных! <br>
-            {{ if eq .ErrRange "1" }}
-            Тариф некорректен! <br>
-            {{end}}
+        {{ if eq .Errors "1" }}
+            <strong>Введите числовые значения! </strong><br>
         {{end}}
-    {{end}} </strong>
-<form method="POST">
-    <strong>
+        {{ if eq .Empty "1" }}
+            <strong>Введите все данные! </strong><br>
+        {{end}}
+        {{ if eq .ErrRange "1" }}
+            <strong>Введите числовые значения в рабочем диапазоне! </strong><br>
+        {{end}}
+    <form method="POST">
+        <strong>
         <table border="1" style="background-color: #b1f3d8">
-            <caption><h3>Введите данные по сотруднику</h3></caption><br>
-            <thead>
-            <th> №</th><th>Наименование</th><th>Значение</th>
-            </thead>
+            <caption><h3>заполните табель<br>
+                    сотрудник месяц </h3></caption><br>
             <tbody>
-
+            <tr><td>1</td><td>Фамилия</td>      <td align="center"><input name="title" value= {{.Title}} autocomplete="on"></td></tr>
+            <tr><td>2</td><td>Имя</td>          <td align="center"><input name="forename" value= {{.Forename}} autocomplete="on"></td></tr>
+            <tr><td>3</td><td>Должность</td>    <td align="center"><input name="kadr" value= {{.Kadr}}></td></tr>
+            <tr><td>4</td><td>Номер отдела</td> <td align="center"><input type="number" name="numotdel" value= {{.Numotdel}} min="1" max="10" step="1"></td></tr>
+            <tr><td>3</td><td>Тариф</td>        <td align="center"><input type="number" name="tarif" value= {{.Tarif}} min="100" max="500" step="10"></td></tr>
+            <tr><td>5</td><td>Отработано дней</td><td align="center">   <input type="number" name="tagemach" value= {{.Tagemach}} min="1" max="22" step="1"></td></tr>
+            <tr><td>5</td><td>Отработано часов</td><td align="center">  <input type="number" name="hourmach" value= {{.Hourmach}} min="1" max="180" step="1"></td></tr>
+            <tr><td>7</td><td>Сверхурочных</td>     <td align="center"> <input type="number" name="oberhour" value= {{.Oberhour}} min="1" max="60" step="1"></td></tr>
             </tbody>
         </table><br>
         <button class="submit" align="center"><input type="submit" align="center" value="Ввести"></button>
-    </strong>
-</form>
-{{end}}
+        </strong>
+    </form>
+    {{end}}
 <button class="button"> <a href= "/personals_index" >Выход</a></button>
 {{end}}

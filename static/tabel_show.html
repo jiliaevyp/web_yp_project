@@ -6,18 +6,17 @@
         <th> №</th><th>Наименование</th><th>Значение</th>
         </thead>
         <tbody>
-        <tr><td>1</td><td>Имя</td>       <td align="center">   </td></tr>
-        <tr><td>2</td><td>Фамилия</td>   <td align="center">  </td></tr>
-        <tr><td>3</td><td>Должность</td> <td align="center">   </td></tr>
-        <tr><td>3</td><td>Тариф</td>     <td align="center">    </td></tr>
-        <tr><td>4</td><td>Отдел</td>     <td align="center">   </td></tr>
-        <tr><td>5</td><td>Е-майл</td>    <td align="center">   </td></tr>
-        <tr><td>6</td><td>Телефон</td>   <td align="center">  </td></tr>
-        <tr><td>7</td><td>Адрес</td>     <td align="center"> </td></tr>
+        <tr><td>2</td><td>Фамилия</td>   <td align="center"> {{ .Title}} </td></tr>
+        <tr><td>1</td><td>Имя</td>       <td align="center"> {{ .Forename}}   </td></tr>
+        <tr><td>3</td><td>Должность</td> <td align="center"> {{ .Kadr}} </td></tr>
+        <tr><td>4</td><td>Отдел</td>     <td align="center"> {{ .Department}}  </td></tr>
+        <tr><td>5</td><td>Отработано дней</td>    <td align="center"> {{ .Tagemach}}  </td></tr>
+        <tr><td>6</td><td>Отработано часов</td>   <td align="center"> {{ .Hourmach}}</td></tr>
+        <tr><td>7</td><td>Сверхурочных</td>     <td align="center"> {{ .Oberhour}}</td></tr>
         </tbody>
     </table><br>
 </strong>
-<button class="button"> <a href= "/tabel_edit?title={{ .Title}}" >Изменить</a></button>
-<button class="button"> <a href= "/tabel_index" >Выход</a></button>
+<button class="button"> <a href= "/tabel_edit?id={{ .Id}}" >Изменить</a></button>
+<button class="button"> <a href= "/tabels_index" >Выход</a></button>
 
 {{end}}

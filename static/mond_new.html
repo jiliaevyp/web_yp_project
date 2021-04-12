@@ -1,48 +1,60 @@
 {{define "content" }}
+<meta charset="utf-8">
+<title>INPUT, атрибут step</title>
     {{ if eq .Ready "1"}}
-    <strong>
-        <table border="1" style="background-color: #b1f3d8">
-        <caption><h3>Текущий месяц   {{.Monat}}  {{.Yahre}}</h3></caption><br>
-        <tbody>
-        <tr><td>1</td><td>Рабочих дней</td>      <td align="center"> {{.Tag}}     </td></tr>
-        <tr><td>2</td><td>Рабочих часов</td>     <td align="center"> {{.Hour}}    </td></tr>
-        <tr><td>3</td><td>Коэф. сверхурочных</td><td align="center"> {{.Kf}}</td></tr>
-        <tr><td>3</td><td>Блок месяц</td><td align="center"> {{.Blmond}}</td></tr>
-        <tr><td>3</td><td>Блок табель</td><td align="center"> {{.Bltime}}</td></tr>
-        <tr><td>3</td><td>Блок начисления</td><td align="center"> {{.Bltabel}}</td></tr>
-        <tr><td>3</td><td>Блок ведомость</td><td align="center"> {{.Blbuch}}</td></tr>
-        <tr><td>3</td><td>Блок персонала</td><td align="center"> {{.Blpers}}</td></tr>
-        </tbody>
-        </table><br>
-    </strong>
+        <strong>
+            <table border="1" style="background-color: #b1f3d8">
+            <caption><h3>Текущий месяц   <br>
+            {{.Monat}}  {{.Yahre}}</h3></caption><br>
+            <tbody>
+            <tr><td>1</td><td>Раб дней</td>         <td align="center"> {{.Tag}}     </td></tr>
+            <tr><td>2</td><td>Раб часов</td>        <td align="center"> {{.Hour}}    </td></tr>
+            <tr><td>3</td><td>Коэф. сверхур</td>    <td align="center"> {{.Kf}}</td></tr>
+            <tr><td>3</td><td>Блок месяц</td>       <td align="center"> {{.Blmond}}</td></tr>
+            <tr><td>3</td><td>Блок табель</td>      <td align="center"> {{.Bltime}}</td></tr>
+            <tr><td>3</td><td>Блок начисления</td>  <td align="center"> {{.Bltabel}}</td></tr>
+            <tr><td>3</td><td>Блок ведомость</td>   <td align="center"> {{.Blbuch}}</td></tr>
+            <tr><td>3</td><td>Блок персонала</td>   <td align="center"> {{.Blpers}}</td></tr>
+                </tbody>
+            </table><br>
+            <button class="button"> <a href= "/mond_edit?id={{ .Id}}" >Изменить</a></button>
+        </strong>
     {{else}}
-            {{ if eq .Errors "1" }}
-            <strong>Введите числовые значения! </strong><br>
-            {{end}}
-            {{ if eq .ErrRange "1" }}
-            <strong>Введите числовые значения в рабочем диапазоне! </strong><br>
-            {{end}}
-        <form method="POST">
-            <strong>
-                <table border="1" style="background-color: #b1f3d8">
-                    <caption><h3>Заполните значения по месяцу</h3></caption><br>
-                    <tbody>
-                    <tr><td>1</td><td>Год</td><td align="center">               <input name="yahre"></td></tr>
-                    <tr><td>2</td><td>Номер месяца</td><td align="center">      <input name="nummonat"></td></tr>
-                    <tr><td>3</td><td>Рабочих дней</td><td align="center">      <input name="tag"></td></tr>
-                    <tr><td>4</td><td>Рабочих часов</td><td align="center">     <input name="hour"></td></tr>
-                    <tr><td>5</td><td>Коэф.сверхурочных</td><td align="center"> <input name="kf"></td></tr>
-                    <tr><td>5</td><td>Блок месяц</td><td align="center"> <input name="blmond"></td></tr>
-                    <tr><td>5</td><td>Блок табель</td><td align="center"> <input name="bltabel"></td></tr>
-                    <tr><td>5</td><td>Блок начисления</td><td align="center"> <input name="bltime"></td></tr>
-                    <tr><td>5</td><td>Блок ведомость</td><td align="center"> <input name="blbuch"></td></tr>
-                    <tr><td>5</td><td>Блок персонала</td><td align="center"> <input name="blpers"></td></tr>
-                    </tbody>
-                </table><br>
-                <button class="button"><input type="submit" value="Ввести"></button>
-            </strong>
+    <form method="POST">
+        <strong>
+        <table border="1" style="background-color: #b1f3d8">
+        <caption><h3>Заполните значения по месяцу</h3></caption><br>
+            <tbody>
+            <tr><td>1</td><td>Год</td><td align="center">               <input type="number" name= "yahre"  value= "2021" min="2021" max="2030"  step="1"></td></tr>
+            <tr><td>2</td><td>Номер месяца</td><td align="center">      <input type="number" name= "nummonat" value= "1" min="1" max="12" step="1"></td></tr>
+            <tr><td>3</td><td>Месяц</td>    <td align="center"><select size="1" name="monat" required >
+                <option value={{.Monat}}>{{.Monat}}</option>
+                <option value="Январь">Январь</option>
+                <option value="Февраль">Февраль</option>
+                <option value="Март">Март</option>
+                <option value="Апрель">Апрель</option>
+                <option value="Май">Май</option>
+                <option value="Июнь">Июнь</option>
+                <option value="Июль">Июль</option>
+                <option value="Август">Август</option>
+                <option value="Сентябрь">Сентябрь</option>
+                <option value="Октябрь">Октябрь</option>
+                <option value="Ноябрь">Ноябрь</option>
+                <option value="Декабрь">Декабрь</option>
+            </select></p>
+            <tr><td>3</td><td>Рабочих дней</td><td align="center">      <input type="number" name= "tag"    value= "21" min="15" max="23" step="1"></td></tr>
+            <tr><td>4</td><td>Рабочих часов</td><td align="center">     <input type="number" name= "hour"   value= "168" min="120" max="176" step="1"></td></tr>
+            <tr><td>5</td><td>Коэф.сверхурочных</td><td align="center"> <input type="number" name= "kf"     value= "2" min="1" max="2" step="0.5"></td></tr>
+            <tr><td>5</td><td>Блок месяц</td><td align="center">        <input type="number" name= "blmond" value= "0" min="0" max="1" step="1"></td></tr>
+            <tr><td>5</td><td>Блок табель</td><td align="center">       <input type="number" name= "bltabel" value= "0" min="0" max="1" step="1"></td></tr>
+            <tr><td>5</td><td>Блок начисления</td><td align="center">   <input type="number" name= "bltime" value= "0" min="0" max="1" step="1"></td></tr>
+            <tr><td>5</td><td>Блок ведомость</td><td align="center">    <input type="number" name= "blbuch" value= "0" min="0" max="1" step="1"></td></tr>
+            <tr><td>5</td><td>Блок персонала</td><td align="center">    <input type="number" name= "blpers" value= "0" min="0" max="1" step="1"></td></tr>
+            </tbody>
+        </table><br>
+            <button class="button"><input type="submit" value="Ввести"></button>
+        </strong>
         </form>
     {{end}}
-    <button class="button"> <a href= "/mond_edit?nummonat={{.Nummonat}}" >Изменить</a></button>
-    <button class="button"> <a href= "/monds_index" >Выход</a></button>
+<button class="button"> <a href= "/monds_index" >Выход</a></button>
 {{end}}

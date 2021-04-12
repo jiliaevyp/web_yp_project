@@ -27,7 +27,7 @@ var partials = []string{
 	"./static/tabel_new.html",
 	"./static/tabel_show.html",
 	"./static/tabel_edit.html",
-	"./static/tabel_index.html",
+	"./static/tabels_index.html",
 	"./static/buchtabel_new.html",
 	"./static/buchtabel_show.html",
 	"./static/buchtabel_edit.html",
@@ -115,6 +115,7 @@ func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, "Internal Server ParseFiles Error", http.StatusInternalServerError)
 			return
 		}
+		// обработка key  del & id
 		del := req.URL.Query().Get("del")
 		idhtml := req.URL.Query().Get("id")
 		id, _ := strconv.Atoi(idhtml)
@@ -132,7 +133,6 @@ func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			panic(err1)
 		}
 		defer rows.Close()
-
 		for rows.Next() {
 			var p frombase
 			err = rows.Scan( // пересылка  данных строки базы personals в "p"
@@ -154,7 +154,6 @@ func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 				panic(err)
 				return
 			}
-			//fmt.Println("id=",p.id)
 			var monatlhtml monat
 			monatlhtml.Id = strconv.Itoa(p.id)
 			monatlhtml.Yahre = strconv.Itoa(p.yahre)
@@ -168,16 +167,10 @@ func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			monatlhtml.Bltabel = strconv.Itoa(p.bltabel)
 			monatlhtml.Blbuch = strconv.Itoa(p.blbuch)
 			monatlhtml.Blpers = strconv.Itoa(p.blpers)
-			monatlhtml.Ready = "1"    // "1" - ввод корректен
-			monatlhtml.Errors = "0"   // "1" - ошибка при вводе полей
-			monatlhtml.Empty = "0"    // "1" - остались пустые поля
-			monatlhtml.ErrRange = "0" // "1" - выход за пределы диапазона
-
 			// добавление строки в таблицу Personalstab для personals_index.html
 			mondtable.Mondstable = append(mondtable.Mondstable, monatlhtml)
 		}
 		mondtable.Ready = "1"
-
 		err = t.ExecuteTemplate(w, "base", mondtable)
 		if err != nil {
 			log.Println(err.Error())
@@ -199,15 +192,8 @@ func Showhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 		var monathtml monat
-		monathtml.Ready = "1"    // 1 - ввод успешный
-		monathtml.Errors = "0"   // 1 - ошибки при вводе
-		monathtml.Empty = "0"    // 1 - есть пустые поля
-		monathtml.ErrRange = "0" // 1 - выход за пределы диапазона
-
-		//nummonathtml := req.URL.Query().Get("nummonat")
-		//nummonat, _ := strconv.Atoi(nummonathtml)
-		//row := db.QueryRow("SELECT * FROM monds WHERE nummonat=$1", nummonat)
-
+		monathtml.Ready = "0" // 1 - ввод успешный
+		//realIdMonat := req.URL.Query().Get("realIdMonat")
 		idhtml := req.URL.Query().Get("id")
 		id, _ := strconv.Atoi(idhtml)
 		row := db.QueryRow("SELECT * FROM monds WHERE id=$1", id)
@@ -229,26 +215,21 @@ func Showhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			fmt.Println("ошибка распаковки строки show")
 			panic(err)
-		} // подготовка HTML
+		}
+		// подготовка HTML
 		var monatlhtml monat
 		monatlhtml.Id = strconv.Itoa(p.id)
 		monatlhtml.Yahre = strconv.Itoa(p.yahre)
-		monatlhtml.Nummonat = strconv.Itoa(p.nummonat) //strconv.Itoa(p.nummonat)
+		monatlhtml.Nummonat = strconv.Itoa(p.nummonat)
 		monatlhtml.Monat = p.monat
 		monatlhtml.Tag = strconv.Itoa(p.tag)
-		monatlhtml.Hour = strconv.Itoa(p.hour) // int ---> string for HTML
+		monatlhtml.Hour = strconv.Itoa(p.hour)
 		monatlhtml.Kf = strconv.Itoa(p.kf)
 		monatlhtml.Blmond = strconv.Itoa(p.blmond)
 		monatlhtml.Bltime = strconv.Itoa(p.bltime)
 		monatlhtml.Bltabel = strconv.Itoa(p.bltabel)
 		monatlhtml.Blbuch = strconv.Itoa(p.blbuch)
 		monatlhtml.Blpers = strconv.Itoa(p.blpers)
-		// проверка корректности ввода
-		monatlhtml.Ready = "1"    // "1" - ввод корректен
-		monatlhtml.Errors = "0"   // "1" - ошибка при вводе полей
-		monatlhtml.Empty = "0"    // "1" - остались пустые поля
-		monatlhtml.ErrRange = "0" // "1" - выход за пределы диапазона
-
 		err = t.ExecuteTemplate(w, "base", monatlhtml)
 		if err != nil {
 			log.Println(err.Error())
@@ -264,132 +245,73 @@ func Newhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/mond_new.html")
 		t, err := template.ParseFiles(files...) // Parse template file.
-
 		if err != nil {
 			log.Println(err.Error())
 			http.Error(w, "Internal Server ParseFiles Error personalNewhandler", http.StatusInternalServerError)
 			return
 		}
 		var monathtml monat
-		monathtml.Ready = "0"    // 1 - ввод успешный
-		monathtml.Errors = "0"   // 1 - ошибки при вводе
-		monathtml.ErrRange = "0" // 1 - выход за пределы диапазона
-
 		if req.Method == "POST" {
 			req.ParseForm()
-			//makeReadyHtml(&personalhtml) // подготовка значений для web
-			//readFromHtml(&personalhtml, req)  	// ввод значений из web
 			monathtml.Ready = "0" // 1 - ввод успешный
 			monathtml.Errors = "0"
-
 			monathtml.Yahre = req.Form["yahre"][0]
-			if checknum(monathtml.Yahre, 2021, 2031) != 0 {
-				monathtml.Yahre = "???"
-				monathtml.ErrRange = "1"
-				monathtml.Errors = "1"
-			}
 			monathtml.Nummonat = req.Form["nummonat"][0]
-			if checknum(monathtml.Nummonat, 1, 12) != 0 {
-				monathtml.Nummonat = "???"
-				monathtml.ErrRange = "1"
-				monathtml.Errors = "1"
-			}
+			monathtml.Monat = req.Form["monat"][0]
 			monathtml.Tag = req.Form["tag"][0]
-			if checknum(monathtml.Tag, 10, 24) != 0 {
-				monathtml.Tag = "???"
-				monathtml.ErrRange = "1"
-				monathtml.Errors = "1"
-			}
 			monathtml.Hour = req.Form["hour"][0]
-			if checknum(monathtml.Hour, 50, 180) != 0 {
-				monathtml.Hour = "???"
-				monathtml.ErrRange = "1"
-				monathtml.Errors = "1"
-			}
 			monathtml.Kf = req.Form["kf"][0]
-			if checknum(monathtml.Kf, 1, 2) != 0 {
-				monathtml.Kf = "???"
-				monathtml.ErrRange = "1"
-				monathtml.Errors = "1"
-			}
 			monathtml.Blmond = req.Form["blmond"][0]
-			if checknum(monathtml.Blmond, 0, 1) != 0 {
-				monathtml.Blmond = "???"
-				monathtml.ErrRange = "1"
-				monathtml.Errors = "1"
-			}
 			monathtml.Bltime = req.Form["bltime"][0]
-			if checknum(monathtml.Bltime, 0, 1) != 0 {
-				monathtml.Bltime = "???"
-				monathtml.ErrRange = "1"
-				monathtml.Errors = "1"
-			}
 			monathtml.Bltabel = req.Form["bltabel"][0]
-			if checknum(monathtml.Bltabel, 0, 1) != 0 {
-				monathtml.Bltabel = "???"
-				monathtml.ErrRange = "1"
-				monathtml.Errors = "1"
-			}
 			monathtml.Blbuch = req.Form["blbuch"][0]
-			if checknum(monathtml.Blbuch, 0, 1) != 0 {
-				monathtml.Blbuch = "???"
-				monathtml.ErrRange = "1"
-				monathtml.Errors = "1"
-			}
 			monathtml.Blpers = req.Form["blpers"][0]
-			if checknum(monathtml.Blpers, 0, 1) != 0 {
-				monathtml.Blpers = "???"
-				monathtml.ErrRange = "1"
-				monathtml.Errors = "1"
+			// перевод в int для базы
+			var p frombase
+			p.yahre, _ = strconv.Atoi(monathtml.Yahre)
+			p.nummonat, _ = strconv.Atoi(monathtml.Nummonat)
+			p.monat = monathtml.Monat //monatArray[p.nummonat-1]
+			p.tag, _ = strconv.Atoi(monathtml.Tag)
+			p.hour, _ = strconv.Atoi(monathtml.Hour)
+			p.kf, _ = strconv.Atoi(monathtml.Kf)
+			p.blmond, _ = strconv.Atoi(monathtml.Blmond)
+			p.bltime, _ = strconv.Atoi(monathtml.Bltime)
+			p.bltabel, _ = strconv.Atoi(monathtml.Bltabel)
+			p.blbuch, _ = strconv.Atoi(monathtml.Blbuch)
+			p.blpers, _ = strconv.Atoi(monathtml.Blpers)
+			nummonat := p.nummonat
+			_, err1 := db.Exec("DELETE FROM monds WHERE nummonat = $1", nummonat)
+			if err1 != nil {
+				fmt.Println("Ошибка при удалении старой записи в monds nummonat = ", nummonat)
+				panic(err1)
 			}
-			if monathtml.Errors == "0" {
+			sqlStatement := `INSERT INTO monds (yahre,nummonat,tag,hour,kf,blmond,bltime,bltabel,blbuch,blpers,monat) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`
+			_, err2 := db.Exec(sqlStatement,
+				&p.yahre,
+				&p.nummonat,
+				&p.tag,
+				&p.hour,
+				&p.kf,
+				&p.blmond,
+				&p.bltime,
+				&p.bltabel,
+				&p.blbuch,
+				&p.blpers,
+				&p.monat,
+			)
+			if err2 != nil {
+				fmt.Println("Ошибка записи новой строки в mondNew")
+				panic(err2)
+			} else {
 				monathtml.Ready = "1"
-				//добавление записи в базу
-				nummonat := monathtml.Nummonat
-
-				_, err1 := db.Exec("DELETE FROM monds WHERE nummonat = $1", nummonat)
-				if err1 != nil {
-					fmt.Println("Ошибка при удалении старой записи в monds nummonat = ", nummonat)
-					panic(err1)
-				}
-				//}
-				var p frombase
-				p.yahre, _ = strconv.Atoi(monathtml.Yahre)
-				p.nummonat, _ = strconv.Atoi(monathtml.Nummonat)
-				p.tag, _ = strconv.Atoi(monathtml.Tag)
-				p.hour, _ = strconv.Atoi(monathtml.Hour) // перевод в int для базы
-				p.kf, _ = strconv.Atoi(monathtml.Kf)     // перевод в int для базы
-				p.blmond, _ = strconv.Atoi(monathtml.Blmond)
-				p.bltime, _ = strconv.Atoi(monathtml.Bltime)
-				p.bltabel, _ = strconv.Atoi(monathtml.Bltabel)
-				p.blbuch, _ = strconv.Atoi(monathtml.Blbuch)
-				p.blpers, _ = strconv.Atoi(monathtml.Blpers)
-				p.monat = monatArray[p.nummonat-1]
-
-				sqlStatement := `INSERT INTO monds (yahre,nummonat,tag,hour,kf,blmond,bltime,bltabel,blbuch,blpers,monat) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`
-				_, err2 := db.Exec(sqlStatement,
-					&p.yahre,
-					&p.nummonat,
-					&p.tag,
-					&p.hour,
-					&p.kf,
-					&p.blmond,
-					&p.bltime,
-					&p.bltabel,
-					&p.blbuch,
-					&p.blpers,
-					&p.monat,
-				)
-				if err2 != nil {
-					fmt.Println("Ошибка записи новой строки в mondNew")
-					panic(err2)
-				}
+				//row := db.QueryRow("returning id")
 			}
 		}
-		err = t.ExecuteTemplate(w, "base", monathtml)
-		if err != nil {
+		err3 := t.ExecuteTemplate(w, "base", monathtml)
+		if err3 != nil {
 			log.Println(err.Error())
 			http.Error(w, "Newmond Internal Server Execute Error", http.StatusInternalServerError)
+			panic(err3)
 			return
 		}
 	}
@@ -406,16 +328,12 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, "Internal Server ParseFiles Error", http.StatusInternalServerError)
 			return
 		}
-
-		//nummonat := req.URL.Query().Get("nummonat")
-		//num, _ := strconv.Atoi(nummonat)
-		//row := db.QueryRow("SELECT * FROM monds WHERE nummonat=$1", num)
-
 		idhtml := req.URL.Query().Get("id")
 		id, _ := strconv.Atoi(idhtml)
 		row := db.QueryRow("SELECT * FROM monds WHERE id=$1", id)
+		// выборка записи из таблицы
 		var p frombase
-		err = row.Scan( // чтение строки из таблицы
+		err = row.Scan(
 			&p.id,
 			&p.yahre,
 			&p.nummonat,
@@ -429,16 +347,11 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			&p.blpers,
 			&p.monat,
 		)
-		if err != nil {
-			fmt.Println("ошибка распаковки строки show")
-			panic(err)
-		} else {
+		if err == nil {
 			// подготовка HTML
+			//id := p.id
 			var monathtml monat
-			monathtml.Empty = "1"
-			monathtml.Ready = "0"    // "1" - ввод корректен
-			monathtml.Errors = "0"   // "1" - ошибка при вводе полей
-			monathtml.ErrRange = "0" // "1" - выход за пределы диапазона
+			monathtml.Ready = "0" // "1" - ввод корректен
 			monathtml.Id = strconv.Itoa(p.id)
 			monathtml.Yahre = strconv.Itoa(p.yahre)
 			monathtml.Nummonat = strconv.Itoa(p.nummonat)
@@ -451,114 +364,74 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			monathtml.Bltabel = strconv.Itoa(p.bltabel)
 			monathtml.Blbuch = strconv.Itoa(p.blbuch)
 			monathtml.Blpers = strconv.Itoa(p.blpers)
-			// проверка корректности ввода
 
 			if req.Method == "POST" {
 				req.ParseForm()
-				monathtml.Ready = "0"  // "1" - ввод корректен
-				monathtml.Errors = "0" // "1" - ошибка при вводе полей
+				monathtml.Errors = "0" // 1 - ввод успешный
+				monathtml.Yahre = req.Form["yahre"][0]
+				monathtml.Nummonat = req.Form["nummonat"][0]
+				monathtml.Monat = req.Form["monat"][0]
 				monathtml.Tag = req.Form["tag"][0]
-				if checknum(monathtml.Tag, 10, 24) != 0 {
-					monathtml.Tag = "???"
-					monathtml.ErrRange = "1"
-					monathtml.Errors = "1"
-				}
 				monathtml.Hour = req.Form["hour"][0]
-				if checknum(monathtml.Hour, 50, 180) != 0 {
-					monathtml.Hour = "???"
-					monathtml.ErrRange = "1"
-					monathtml.Errors = "1"
-				}
 				monathtml.Kf = req.Form["kf"][0]
-				if checknum(monathtml.Kf, 1, 2) != 0 {
-					monathtml.Kf = "???"
-					monathtml.ErrRange = "1"
-					monathtml.Errors = "1"
-				}
 				monathtml.Blmond = req.Form["blmond"][0]
-				if checknum(monathtml.Blmond, 0, 1) != 0 {
-					monathtml.Blmond = "???"
-					monathtml.ErrRange = "1"
-					monathtml.Errors = "1"
-				}
 				monathtml.Bltime = req.Form["bltime"][0]
-				if checknum(monathtml.Bltime, 0, 1) != 0 {
-					monathtml.Bltime = "???"
-					monathtml.ErrRange = "1"
-					monathtml.Errors = "1"
-				}
 				monathtml.Bltabel = req.Form["bltabel"][0]
-				if checknum(monathtml.Bltabel, 0, 1) != 0 {
-					monathtml.Bltabel = "???"
-					monathtml.ErrRange = "1"
-					monathtml.Errors = "1"
-				}
 				monathtml.Blbuch = req.Form["blbuch"][0]
-				if checknum(monathtml.Blbuch, 0, 1) != 0 {
-					monathtml.Blbuch = "???"
-					monathtml.ErrRange = "1"
-					monathtml.Errors = "1"
-				}
 				monathtml.Blpers = req.Form["blpers"][0]
-				if checknum(monathtml.Blpers, 0, 1) != 0 {
-					monathtml.Blpers = "???"
-					monathtml.ErrRange = "1"
+				// перевод в int для базы
+				var p frombase
+				p.id, _ = strconv.Atoi(monathtml.Id)
+				p.yahre, _ = strconv.Atoi(monathtml.Yahre)
+				p.nummonat, _ = strconv.Atoi(monathtml.Nummonat)
+				p.monat = monathtml.Monat
+				p.tag, _ = strconv.Atoi(monathtml.Tag)
+				p.hour, _ = strconv.Atoi(monathtml.Hour)
+				p.kf, _ = strconv.Atoi(monathtml.Kf)
+				p.blmond, _ = strconv.Atoi(monathtml.Blmond)
+				p.bltime, _ = strconv.Atoi(monathtml.Bltime)
+				p.bltabel, _ = strconv.Atoi(monathtml.Bltabel)
+				p.blbuch, _ = strconv.Atoi(monathtml.Blbuch)
+				p.blpers, _ = strconv.Atoi(monathtml.Blpers)
+
+				//_, err1 := db.Exec("DELETE FROM monds WHERE id = $1", id)
+				//if err1 != nil {
+				//	fmt.Println("Ошибка при удалении старой записи в monds id = ", id)
+				//	panic(err1)
+				//}
+				sqlStatement := `INSERT INTO monds (id,yahre,nummonat,tag,hour,kf,blmond,bltime,bltabel,blbuch,blpers,monat) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`
+				_, err2 := db.Exec(sqlStatement,
+					&p.id,
+					&p.yahre,
+					&p.nummonat,
+					&p.tag,
+					&p.hour,
+					&p.kf,
+					&p.blmond,
+					&p.bltime,
+					&p.bltabel,
+					&p.blbuch,
+					&p.blpers,
+					&p.monat,
+				)
+				if err2 != nil {
+					fmt.Println("Ошибка записи edit строки в mondNew")
 					monathtml.Errors = "1"
-
-				}
-				if monathtml.Errors == "0" {
+					panic(err2)
+				} else {
+					//fmt.Println( "новая запись id=", p.id)
 					monathtml.Ready = "1"
-					monathtml.Empty = "0"
-
-					//добавление записи в базу
-					var p frombase
-					p.id, _ = strconv.Atoi(monathtml.Id)
-					p.yahre, _ = strconv.Atoi(monathtml.Yahre)
-					p.nummonat, _ = strconv.Atoi(monathtml.Nummonat)
-					p.monat = monathtml.Monat
-					p.tag, _ = strconv.Atoi(monathtml.Tag)
-					p.hour, _ = strconv.Atoi(monathtml.Hour) // перевод в int для базы
-					p.kf, _ = strconv.Atoi(monathtml.Kf)     // перевод в int для базы
-					p.blmond, _ = strconv.Atoi(monathtml.Blmond)
-					p.bltime, _ = strconv.Atoi(monathtml.Bltime)
-					p.bltabel, _ = strconv.Atoi(monathtml.Bltabel)
-					p.blbuch, _ = strconv.Atoi(monathtml.Blbuch)
-					p.blpers, _ = strconv.Atoi(monathtml.Blpers)
-					id := p.id
-					_, err = db.Exec("DELETE FROM monds WHERE id = $1", id)
-					if err != nil { // удаление старой записи
-						panic(err)
-					}
-					sqlStatement := `INSERT INTO monds (id,yahre,nummonat,tag,hour,kf,blmond,bltime,bltabel,blbuch,blpers,monat) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`
-					_, err2 := db.Exec(sqlStatement,
-						&p.id,
-						&p.yahre,
-						&p.nummonat,
-						&p.tag,
-						&p.hour,
-						&p.kf,
-						&p.blmond,
-						&p.bltime,
-						&p.bltabel,
-						&p.blbuch,
-						&p.blpers,
-						&p.monat,
-					)
-					if err2 != nil {
-						fmt.Println("Ошибка записи новой строки в mondNew")
-						panic(err2)
-					}
 				}
 			}
-			//fmt.Println(monathtml)
-			err = t.ExecuteTemplate(w, "base", monathtml)
-			if err != nil {
+			err3 := t.ExecuteTemplate(w, "base", monathtml)
+			if err3 != nil {
 				log.Println(err.Error())
-				http.Error(w, "mond_edit Internal Server Execute Error", http.StatusInternalServerError)
+				http.Error(w, "Newmond Internal Server Execute Error", http.StatusInternalServerError)
 				return
 			}
+		} else {
+			fmt.Println("ошибка распаковки строки show")
+			panic(err)
 		}
-
 	}
-
 }

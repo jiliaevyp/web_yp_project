@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"github.com/jiliaevyp/web_yp_project/mond"
 	"github.com/jiliaevyp/web_yp_project/personals"
+	"github.com/jiliaevyp/web_yp_project/tabel"
 	"html/template"
 	"log"
 	"net/http"
 	"net/mail"
+	"strconv"
 )
 
 const (
@@ -38,7 +40,7 @@ var partials = []string{
 	"./static/tabel_new.html",
 	"./static/tabel_show.html",
 	"./static/tabel_edit.html",
-	"./static/tabel_index.html",
+	"./static/tabels_index.html",
 	"./static/buchtabel_new.html",
 	"./static/buchtabel_show.html",
 	"./static/buchtabel_edit.html",
@@ -52,6 +54,8 @@ var admin struct { // администратор
 	Email    string
 	Passw    string
 	ErrEmail string // ошибка ввода почты
+	Yahre	 string		// текущие месяц и дата
+	Monat	 string
 	Passpass string
 	Ready    string // 1 - идентификация прошла
 	Errors   string // "1" - ошибка при вводе полей
@@ -68,32 +72,34 @@ func inpMailAddress(nameAddress string) (err int, email string, title string) {
 }
 
 func Server(addrWeb string, db *sql.DB) {
-	http.HandleFunc("/", indexHandler)
 
+	http.HandleFunc("/", indexHandler)
+	jetzYahre := 2021
+	jetzMonat := "январь"
 	http.Handle("/monds_index", http.HandlerFunc(mond.Indexhandler(db)))
 	http.Handle("/mond_new", http.HandlerFunc(mond.Newhandler(db)))
 	http.Handle("/mond_show", http.HandlerFunc(mond.Showhandler(db)))
 	http.Handle("/mond_edit", http.HandlerFunc(mond.Edithandler(db)))
 
-	http.Handle("/personals_index", http.HandlerFunc(personals.Personalshandler(db)))
-	http.Handle("/personal_new", http.HandlerFunc(personals.PersonalNewhandler(db)))
-	http.Handle("/personal_show", http.HandlerFunc(personals.PersonalShowhandler(db)))
-	http.Handle("/personal_edit", http.HandlerFunc(personals.PersonalEdithandler(db)))
+	http.Handle("/personals_index", http.HandlerFunc(personals.Indexhandler(db, jetzYahre,jetzMonat)))
+	http.Handle("/personal_new", http.HandlerFunc(personals.Newhandler(db, jetzYahre,jetzMonat)))
+	http.Handle("/personal_show", http.HandlerFunc(personals.Showhandler(db, jetzYahre,jetzMonat)))
+	http.Handle("/personal_edit", http.HandlerFunc(personals.Edithandler(db, jetzYahre,jetzMonat)))
 
-	//http.Handle("/worktime_index", http.HandlerFunc(worktimeIndexHandler(db)))
-	//http.Handle("/worktime_new", http.HandlerFunc(worktimeNewHandler(db)))
-	//http.Handle("/worktime_show", http.HandlerFunc(worktimeShowHandler(db)))
-	//http.Handle("/worktime_edit", http.HandlerFunc(worktimeEditHandler(db)))
+	//http.Handle("/worktime_index", http.HandlerFunc(IndexHandler(db)))
+	//http.Handle("/worktime_new", http.HandlerFunc(NewHandler(db)))
+	//http.Handle("/worktime_show", http.HandlerFunc(ShowHandler(db)))
+	//http.Handle("/worktime_edit", http.HandlerFunc(EditHandler(db)))
 	//
-	//http.Handle("/tabel_index", http.HandlerFunc(tabelIndexHandler(db)))
-	//http.Handle("/tabel_new", http.HandlerFunc(tabelNewHandler(db)))
-	//http.Handle("/tabel_show", http.HandlerFunc(tabelShowHandler(db)))
-	//http.Handle("/tabel_edit", http.HandlerFunc(tabelEditHandler(db)))
+	http.Handle("/tabels_index", http.HandlerFunc(tabel.IndexHandler(db, jetzYahre,jetzMonat)))
+	http.Handle("/tabel_new", http.HandlerFunc(tabel.NewHandler(db, jetzYahre,jetzMonat)))
+	http.Handle("/tabel_show", http.HandlerFunc(tabel.ShowHandler(db, jetzYahre,jetzMonat)))
+	http.Handle("/tabel_edit", http.HandlerFunc(tabel.EditHandler(db, jetzYahre,jetzMonat)))
 	//
-	//http.Handle("/buchtabel_index", http.HandlerFunc(buchtabelIndexHandler(db)))
-	//http.Handle("/buchtabel_new", http.HandlerFunc(buchtabelNewHandler(db)))
-	//http.Handle("/buchtabel_show", http.HandlerFunc(buchtabelShowHandler(db)))
-	//http.Handle("/buchtabel_edit", http.HandlerFunc(buchtabelEditHandler(db)))
+	//http.Handle("/buchtabel_index", http.HandlerFunc(IndexHandler(db)))
+	//http.Handle("/buchtabel_new", http.HandlerFunc(NewHandler(db)))
+	//http.Handle("/buchtabel_show", http.HandlerFunc(ShowHandler(db)))
+	//http.Handle("/buchtabel_edit", http.HandlerFunc(EditHandler(db)))
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 	fmt.Println("Топай на web страницу--->" + addrWeb + "!") // отладочная печать
@@ -114,6 +120,11 @@ func indexHandler(w http.ResponseWriter, req *http.Request) {
 	files := append(partials, "./static/index.html")
 	t, err := template.ParseFiles(files...) // Parse template file.
 	exit, ok := req.URL.Query()["exit"]
+	realIdMonat := req.URL.Query().Get("id")
+	id_mond, err := strconv.Atoi("realIdMonat")
+	if err != nil {
+		admin.Monat =
+	}
 	if ok && len(exit[0]) > 0 {
 		_exit := exit[0]
 		if _exit == "exit" {
