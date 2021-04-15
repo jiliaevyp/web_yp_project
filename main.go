@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jiliaevyp/web_yp_project/server"
+	"github.com/jiliaevyp/web_yp_project/servfunc"
 	_ "github.com/lib/pq"
 	"net"
 	"os"
@@ -28,85 +29,85 @@ const (
 )
 
 // проверка на ввод  'Y = 1
-func yesNo() int {
-	var yesNo string
-	len := 4
-	data := make([]byte, len)
-	n, err := os.Stdin.Read(data)
-	yesNo = string(data[0 : n-1])
-	if err == nil && (yesNo == "Y" || yesNo == "y" || yesNo == "Н" || yesNo == "н") {
-		return 1
-	} else {
-		return 0
-	}
-}
-
-// ввод  IP адреса сервера
-func inpIP() (string, int) {
-	data := ""
-	err := 1
-	for err == 1 {
-		fmt.Print("Локальный сервера по умолчанию:	", defaultLocalhost, "\n", "Для изменения нажмите 'Y' ")
-		yes := yesNo()
-		if yes != 1 {
-			data = defaultLocalhost
-			err = 0
-		} else {
-			for err == 1 {
-				fmt.Print("IP адрес сервера по умолчанию:	", defaultIp, "\n", "Для изменения нажмите 'Y' ")
-				yes := yesNo()
-				if yes != 1 {
-					data = defaultIp
-					err = 0
-				} else {
-					fmt.Println("Введите IP адрес сервера:	")
-					fmt.Scanf(
-						"%s\n",
-						&data,
-					)
-					iperr := net.ParseIP(data)
-					if iperr == nil {
-						fmt.Println(ErrInvalidIPaddress)
-						return data, 1
-					} else {
-						err = 0
-					}
-				}
-			}
-		}
-	}
-	return data, err
-}
-
-//ввод порта сервера
-func inpPort() (string, int) {
-	var (
-		webPort string
-	)
-	err := 1
-	for err == 1 {
-		fmt.Print("Порт по умолчанию:	", defaultPort, "\n", "Для изменения нажмите 'Y' ")
-		yes := yesNo()
-		if yes != 1 {
-			webPort = defaultPort
-			err = 0
-		} else {
-			fmt.Print("Введите порт:	")
-			fmt.Scanf(
-				"%s\n",
-				&webPort,
-			)
-			res, err1 := strconv.ParseFloat(webPort, 16)
-			res = res + 1
-			err = 0
-			if err1 != nil {
-				fmt.Println(ErrInvalidPort)
-				return ":" + webPort, 1
-			}
-		}
-	}
-	return webPort, 0
-}
+//func yesNo() int {
+//	var yesNo string
+//	len := 4
+//	data := make([]byte, len)
+//	n, err := os.Stdin.Read(data)
+//	yesNo = string(data[0 : n-1])
+//	if err == nil && (yesNo == "Y" || yesNo == "y" || yesNo == "Н" || yesNo == "н") {
+//		return 1
+//	} else {
+//		return 0
+//	}
+//}
+//
+//// ввод  IP адреса сервера
+//func inpIP() (string, int) {
+//	data := ""
+//	err := 1
+//	for err == 1 {
+//		fmt.Print("Локальный сервера по умолчанию:	", defaultLocalhost, "\n", "Для изменения нажмите 'Y' ")
+//		yes := yesNo()
+//		if yes != 1 {
+//			data = defaultLocalhost
+//			err = 0
+//		} else {
+//			for err == 1 {
+//				fmt.Print("IP адрес сервера по умолчанию:	", defaultIp, "\n", "Для изменения нажмите 'Y' ")
+//				yes := yesNo()
+//				if yes != 1 {
+//					data = defaultIp
+//					err = 0
+//				} else {
+//					fmt.Println("Введите IP адрес сервера:	")
+//					fmt.Scanf(
+//						"%s\n",
+//						&data,
+//					)
+//					iperr := net.ParseIP(data)
+//					if iperr == nil {
+//						fmt.Println(ErrInvalidIPaddress)
+//						return data, 1
+//					} else {
+//						err = 0
+//					}
+//				}
+//			}
+//		}
+//	}
+//	return data, err
+//}
+//
+////ввод порта сервера
+//func inpPort() (string, int) {
+//	var (
+//		webPort string
+//	)
+//	err := 1
+//	for err == 1 {
+//		fmt.Print("Порт по умолчанию:	", defaultPort, "\n", "Для изменения нажмите 'Y' ")
+//		yes := yesNo()
+//		if yes != 1 {
+//			webPort = defaultPort
+//			err = 0
+//		} else {
+//			fmt.Print("Введите порт:	")
+//			fmt.Scanf(
+//				"%s\n",
+//				&webPort,
+//			)
+//			res, err1 := strconv.ParseFloat(webPort, 16)
+//			res = res + 1
+//			err = 0
+//			if err1 != nil {
+//				fmt.Println(ErrInvalidPort)
+//				return ":" + webPort, 1
+//			}
+//		}
+//	}
+//	return webPort, 0
+//}
 
 func main() {
 	var (
@@ -134,7 +135,7 @@ func main() {
 		err = 1
 		for err == 1 {
 			fmt.Println("Введите web адрес  сервера:	")
-			IPaddrWeb, err = inpIP() // добавить после 5 попыток
+			IPaddrWeb, err = servfunc.InpIP() // добавить после 5 попыток
 			if err == 1 {
 				fmt.Println("Web адрес некорректен")
 			}
@@ -143,7 +144,7 @@ func main() {
 		err = 1
 		for err == 1 {
 			fmt.Print("Введите порт:	")
-			webPort, err = inpPort() // добавить после 5 попыток
+			webPort, err = servfunc.InpPort() // добавить после 5 попыток
 			if err == 1 {
 				fmt.Println("Порт некорректен")
 			}
@@ -175,7 +176,7 @@ func main() {
 		//go client()
 		fmt.Print("Перезапустить? (Y)   ")
 		fmt.Println("Закончить?  (Enter)")
-		komand = yesNo()
+		komand = servfunc.YesNo()
 	}
 	fmt.Println("Рад был для Вас сделать что-то полезное !")
 	fmt.Print("Обращайтесь в любое время без колебаний!", "\n", "\n")

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	_ "errors"
 	"fmt"
+	"github.com/jiliaevyp/web_yp_project/servfunc"
 	"html/template"
 	"log"
 	"net/http"
@@ -90,21 +91,21 @@ var mondtable struct {
 	Mondstable []monat // таблица по сотрудниам  в monds_index.html
 }
 
-// валидация  числовых вводов и диапазонов
-func checknum(checknum string, min int, max int) int {
-	num, err := strconv.Atoi(checknum)
-	if err != nil {
-		return 1
-	} else {
-		if num >= min && num <= max {
-			return 0
-		} else {
-			return 1
-		}
-	}
-}
+//// валидация  числовых вводов и диапазонов
+//func checknum(checknum string, min int, max int) int {
+//	num, err := strconv.Atoi(checknum)
+//	if err != nil {
+//		return 1
+//	} else {
+//		if num >= min && num <= max {
+//			return 0
+//		} else {
+//			return 1
+//		}
+//	}
+//}
 
-// просмотр таблицы из personaldb
+// просмотр таблицы monds из geoplastdb
 func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
@@ -349,7 +350,6 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 		)
 		if err == nil {
 			// подготовка HTML
-			//id := p.id
 			var monathtml monat
 			monathtml.Ready = "0" // "1" - ввод корректен
 			monathtml.Id = strconv.Itoa(p.id)

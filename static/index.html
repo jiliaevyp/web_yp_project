@@ -1,7 +1,7 @@
 {{define "content" }}
     {{ if eq .Ready "1"}}
     <strong>
-        <h2>{{. RealMonat}}   {{ .RealYahre></h2>
+    {{.IdMonat}} {{.JetzMonat}}  {{.JetzYahre}}
     <table border="1" style="background-color: #b1f3d8">
         <h2><div class="caption">Пользователь</div></h2>
         <tbody>
@@ -34,7 +34,7 @@
                     <tr><td>3</td><td>Пароль</td><td align="center"><input forename="passw"></td></tr>
                     </tbody>
                 </table><br>
-                <button class="button"><input type="submit" value="Ввести"></button>
+                <button class="button"><input type="submit" formaction="/index?id=0" value="Ввести"></button>
             </strong>
         </form>
     {{end}}

@@ -3,6 +3,7 @@ package tabel
 import (
 	"database/sql"
 	"fmt"
+	"github.com/jiliaevyp/web_yp_project/servfunc"
 	"html/template"
 	"log"
 	"net/http"
@@ -97,21 +98,7 @@ var tabtable struct {
 	Tabelstable []tabel // таблица по сотрудниам  в personals_index.html
 }
 
-// валидация  числовых вводов и диапазонов
-func checknum(checknum string, min int, max int) int {
-	num, err := strconv.Atoi(checknum)
-	if err != nil {
-		return 1
-	} else {
-		if num >= min && num <= max {
-			return 0
-		} else {
-			return 1
-		}
-	}
-}
-
-func IndexHandler(db *sql.DB, jetzYahre int, jetzMonat string) func(w http.ResponseWriter, req *http.Request) {
+func IndexHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/tabels_index.html")
@@ -199,7 +186,7 @@ func IndexHandler(db *sql.DB, jetzYahre int, jetzMonat string) func(w http.Respo
 			tabtable.Tabelstable = append(tabtable.Tabelstable, tabelhtml)
 		}
 		tabtable.Ready = "1"
-		tabtable.Jetzyahre = strconv.Itoa(jetzYahre)
+		tabtable.Jetzyahre = jetzYahre
 		tabtable.Jetzmonat = jetzMonat
 		err = t.ExecuteTemplate(w, "base", tabtable)
 		if err != nil {
@@ -210,7 +197,7 @@ func IndexHandler(db *sql.DB, jetzYahre int, jetzMonat string) func(w http.Respo
 	}
 }
 
-func ShowHandler(db *sql.DB, jetzYahre int, jetzMonat string) func(w http.ResponseWriter, req *http.Request) {
+func ShowHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/tabel_show.html")
@@ -277,7 +264,7 @@ func ShowHandler(db *sql.DB, jetzYahre int, jetzMonat string) func(w http.Respon
 		tabelhtml.Errors = "0"   // "1" - ошибка при вводе полей
 		tabelhtml.Empty = "0"    // "1" - остались пустые поля
 		tabelhtml.ErrRange = "0" // "1" - выход за пределы диапазона
-		tabtable.Jetzyahre = strconv.Itoa(jetzYahre)
+		tabtable.Jetzyahre = jetzYahre
 		tabtable.Jetzmonat = jetzMonat
 		err = t.ExecuteTemplate(w, "base", tabelhtml)
 		if err != nil {
@@ -288,7 +275,7 @@ func ShowHandler(db *sql.DB, jetzYahre int, jetzMonat string) func(w http.Respon
 	}
 }
 
-func EditHandler(db *sql.DB, jetzYahre int, jetzMonat string) func(w http.ResponseWriter, req *http.Request) {
+func EditHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		var tabelhtml tabel // переменная по сотруднику при вводе и отображении в personal.HTML
 		//var tabrow _tabelrow
@@ -309,7 +296,7 @@ func EditHandler(db *sql.DB, jetzYahre int, jetzMonat string) func(w http.Respon
 	}
 }
 
-func NewHandler(db *sql.DB, jetzYahre int, jetzMonat string) func(w http.ResponseWriter, req *http.Request) {
+func NewHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/tabel_new.html")
@@ -363,7 +350,7 @@ func NewHandler(db *sql.DB, jetzYahre int, jetzMonat string) func(w http.Respons
 			//	panic(err2)
 			//}
 		}
-		tabtable.Jetzyahre = strconv.Itoa(jetzYahre)
+		tabtable.Jetzyahre = jetzYahre
 		tabtable.Jetzmonat = jetzMonat
 		err1 := t.ExecuteTemplate(w, "base", tabelhtml)
 		if err1 != nil {
