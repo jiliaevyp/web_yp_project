@@ -4,6 +4,7 @@ import (
 	_ "crypto/dsa"
 	"database/sql"
 	"fmt"
+	"github.com/jiliaevyp/web_yp_project/mond"
 	"github.com/jiliaevyp/web_yp_project/servfunc"
 	_ "github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -62,8 +63,6 @@ type person struct { // данные по сотруднику при вводе
 	Phone      string
 	Address    string
 	Tarif      string // почасовая руб
-	Jetzyahre  string
-	Jetzmonat  string
 	Ready      string // "1" - ввод корректен
 	Errors     string // "1" - ошибка при вводе полей
 	ErrPhone   string // "1"- ошибка при вводе телефона
@@ -73,6 +72,8 @@ type person struct { // данные по сотруднику при вводе
 	ErrNumotd string // "1"- ошибка при вводе номера отдела
 	Empty     string // "1" - остались пустые поля
 	ErrRange  string // "1" - выход за пределы диапазона
+	Jetzyahre string // для sidebar
+	Jetzmonat string // для sidebar
 }
 
 type frombase struct { // строка  при чтении/записи из/в базы personaldb
@@ -90,97 +91,29 @@ type frombase struct { // строка  при чтении/записи из/в
 
 var (
 	personals struct {
-		Ready       string
-		Jetzyahre   string
-		Jetzmonat   string
+		Ready     string
+		Jetzyahre string
+		Jetzmonat string
+		//IdRealMond	string
 		Persontable []person //person // таблица по сотрудниам  в personals_index.html
 	}
 )
 
-// проверка корректности емайл адреса nameAddress --> "имя <email@mail.com>
-//func inpMailAddress(nameAddress string) (err int, email string, title string) {
-//	e, err1 := mail.ParseAddress(nameAddress)
-//	if err1 != nil {
-//		return 1, e.Address, e.Name //"?", "?"
-//	}
-//	return 0, e.Address, e.Name
-//}
-//
-//// валидация  числовых вводов и диапазонов
-//func checknum(checknum string, min int, max int) int {
-//	num, err := strconv.Atoi(checknum)
-//	if err != nil {
-//		return 1
-//	} else {
-//		if num >= min && num <= max {
-//			return 0
-//		} else {
-//			return 1
-//		}
-//	}
-//}
-//
-//// подготовка  значений для web
-//func makeReadyHtml(p *person) {
-//	p.Ready = "0"     // 1 - ввод успешный
-//	p.Errors = "0"    // 1 - ошибки при вводе
-//	p.Empty = "0"     // 1 - есть пустые поля
-//	p.ErrRange = "0"  // 1 - выход за пределы диапазона
-//	p.ErrPhone = "0"  // 1 - ошибка в тлф номере
-//	p.ErrEmail = "0"  // 1 - ошибка в email
-//	p.ErrTarif = "0"  // 1 - ошибка в тарифе
-//	p.ErrNumotd = "0" // 1 - ошибка в номере отдела
-//	return
-//}
-//
-//// подготовка и ввод значений из web
-//func readFromHtml(p *person, req *http.Request) {
-//	p.Title = req.Form["title"][0]
-//	p.Forename = req.Form["forename"][0]
-//	p.Kadr = req.Form["kadr"][0]
-//	p.Tarif = req.Form["tarif"][0]
-//	p.Numotdel = req.Form["numotdel"][0]
-//	p.Email = req.Form["email"][0]
-//	p.Phone = req.Form["phone"][0]
-//	p.Address = req.Form["address"][0]
-//	return
-//}
-//
-//// проверка вводимых значений
-//func checkNumer(personalhtml *person) int {
-//	var err int
-//	errout := 0
-//	err = checknum(personalhtml.Tarif, 10, 1000)
-//	if err != 0 {
-//		personalhtml.ErrRange = "1"
-//		personalhtml.ErrTarif = "1"
-//		errout = 1
-//	}
-//	err = checknum(personalhtml.Numotdel, 0, 20)
-//	if err != 0 {
-//		personalhtml.ErrRange = "1"
-//		personalhtml.ErrNumotd = "1"
-//		errout = 1
-//	}
-//	err, personalhtml.Email, _ = inpMailAddress(personalhtml.Title + "<" + personalhtml.Email + ">") // проверка email адреса
-//	if err > 0 {
-//		personalhtml.ErrEmail = "1"
-//		errout = 1
-//	}
-//	_, err1 := libphonenumber.Parse(personalhtml.Phone, "RU")
-//	if err1 != nil {
-//		personalhtml.ErrPhone = "1"
-//		errout = 1
-//	}
-//	if personalhtml.Forename == "" || personalhtml.Title == "" || personalhtml.Kadr == "" || personalhtml.Address == "" {
-//		personalhtml.Empty = "1"
-//		errout = 1
-//	}
-//	return errout
-//}
+// подготовка  значений для web
+func makeReadyHtml(p *person) {
+	p.Ready = "0"     // 1 - ввод успешный
+	p.Errors = "0"    // 1 - ошибки при вводе
+	p.Empty = "0"     // 1 - есть пустые поля
+	p.ErrRange = "0"  // 1 - выход за пределы диапазона
+	p.ErrPhone = "0"  // 1 - ошибка в тлф номере
+	p.ErrEmail = "0"  // 1 - ошибка в email
+	p.ErrTarif = "0"  // 1 - ошибка в тарифе
+	p.ErrNumotd = "0" // 1 - ошибка в номере отдела
+	return
+}
 
 // просмотр таблицы из personaldb
-func Indexhandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func(w http.ResponseWriter, req *http.Request) {
+func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		//fmt.Println("idMond=", idMond, jetzMonat, jetzYahre)
 		files := append(partials, "./static/personals_index.html")
@@ -190,11 +123,9 @@ func Indexhandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fu
 			http.Error(w, "Internal Server ParseFiles Error", http.StatusInternalServerError)
 			return
 		}
+		// обработка  key "id" "del"  ---> удаление записи
 		del := req.URL.Query().Get("del")
 		idhtml := req.URL.Query().Get("id")
-		idMond := req.URL.Query().Get("idMond")
-		fmt.Println("idMond=", idMond)
-
 		id, _ := strconv.Atoi(idhtml)
 		if del == "del" {
 			_, err = db.Exec("DELETE FROM personals WHERE id = $1", id)
@@ -202,15 +133,14 @@ func Indexhandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fu
 				panic(err)
 			}
 		}
+		// выборка таблицы
 		personals.Persontable = nil
-
 		rows, err1 := db.Query(`SELECT * FROM personals`)
 		if err1 != nil {
 			fmt.Println(" table Personals ошибка чтения ")
 			panic(err1)
 		}
 		defer rows.Close()
-
 		for rows.Next() {
 			var p frombase
 			err = rows.Scan( // пересылка  данных строки базы personals в "p"
@@ -244,12 +174,14 @@ func Indexhandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fu
 			personalhtml.Ready = "1"
 			personalhtml.Errors = "0"
 			personalhtml.Empty = "0"
+
 			// добавление строки в таблицу Personalstab для personals_index.html
 			personals.Persontable = append(personals.Persontable, personalhtml)
 		}
 		personals.Ready = "1"
-		personals.Jetzyahre = jetzYahre
-		personals.Jetzmonat = jetzMonat
+		// для sidebar
+		personals.Jetzyahre = mond.Jetzyahre
+		personals.Jetzmonat = mond.Jetzmonat
 		err = t.ExecuteTemplate(w, "base", personals)
 		if err != nil {
 			log.Println(err.Error())
@@ -260,7 +192,7 @@ func Indexhandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fu
 }
 
 // просмотр записи из personaldb
-func Showhandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func(w http.ResponseWriter, req *http.Request) {
+func Showhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/personal_show.html")
@@ -311,8 +243,9 @@ func Showhandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fun
 		personalhtml.Phone = p.phone
 		personalhtml.Address = p.address
 		personalhtml.Department = p.department
-		personalhtml.Jetzyahre = jetzYahre
-		personalhtml.Jetzmonat = jetzMonat
+		// для sidebar
+		personalhtml.Jetzyahre = mond.Jetzyahre
+		personalhtml.Jetzmonat = mond.Jetzmonat
 		err = t.ExecuteTemplate(w, "base", personalhtml)
 		if err != nil {
 			log.Println(err.Error())
@@ -323,7 +256,7 @@ func Showhandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fun
 }
 
 // новая запись формы personal в базу personaldb
-func Newhandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func(w http.ResponseWriter, req *http.Request) {
+func Newhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/personal_new.html")
@@ -340,7 +273,7 @@ func Newhandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func
 		//for personalhtml.Errors == "1" {
 		if req.Method == "POST" {
 			req.ParseForm()
-			servfunc.MakeReadyHtml(&personalhtml) // подготовка значений для web
+			makeReadyHtml(&personalhtml) // подготовка значений для web
 			//readFromHtml(&personalhtml, req)  	// ввод значений из web
 			personalhtml.Errors = "0"
 			personalhtml.Ready = "0"
@@ -461,9 +394,9 @@ func Newhandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func
 				}
 			}
 		}
-		//}
-		personalhtml.Jetzyahre = jetzYahre
-		personalhtml.Jetzmonat = jetzMonat
+		// для sidebar
+		personalhtml.Jetzyahre = mond.Jetzyahre
+		personalhtml.Jetzmonat = mond.Jetzmonat
 		err = t.ExecuteTemplate(w, "base", personalhtml)
 		if err != nil {
 			log.Println(err.Error())
@@ -474,7 +407,7 @@ func Newhandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func
 }
 
 // редактирование формы personal и замена в базе personaldb
-func Edithandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func(w http.ResponseWriter, req *http.Request) {
+func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/personal_edit.html")
@@ -505,8 +438,8 @@ func Edithandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fun
 			panic(err)
 		} else {
 			var personalhtml person
-			servfunc.MakeReadyHtml(&personalhtml) // подготовка флагов для HTML = 0
-			personalhtml.Empty = "1"              // якобы - есть пустые поля для отображения
+			makeReadyHtml(&personalhtml) // подготовка флагов для HTML = 0
+			personalhtml.Empty = "1"     // якобы - есть пустые поля для отображения
 			personalhtml.Id = strconv.Itoa(p.id)
 			personalhtml.Title = p.title
 			personalhtml.Forename = p.forename
@@ -519,7 +452,7 @@ func Edithandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fun
 			personalhtml.Department = p.department
 			if req.Method == "POST" {
 				req.ParseForm()
-				servfunc.MakeReadyHtml(&personalhtml) // подготовка значений для web
+				makeReadyHtml(&personalhtml) // подготовка значений для web
 				// ввод новых данных
 				personalhtml.Errors = "0"
 				personalhtml.Ready = "0"
@@ -566,10 +499,6 @@ func Edithandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fun
 					personalhtml.Errors = "1"
 				}
 				personalhtml.Department = req.Form["department"][0]
-				//..else {
-				//	department, _ := strconv.Atoi(personalhtml.Numotdel)
-				//	personalhtml.Department = Department[department]
-				//}
 				personalhtml.Email = req.Form["email"][0]
 				var errmail int
 				if personalhtml.Email != "" && personalhtml.Email != "???" {
@@ -631,8 +560,9 @@ func Edithandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fun
 					}
 				}
 			}
-			personalhtml.Jetzyahre = jetzYahre
-			personalhtml.Jetzmonat = jetzMonat
+			// для sidebar
+			personalhtml.Jetzyahre = mond.Jetzyahre
+			personalhtml.Jetzmonat = mond.Jetzmonat
 			err = t.ExecuteTemplate(w, "base", personalhtml)
 			if err != nil {
 				log.Println(err.Error())

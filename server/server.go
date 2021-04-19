@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/jiliaevyp/web_yp_project/mond"
 	"github.com/jiliaevyp/web_yp_project/personals"
-	"github.com/jiliaevyp/web_yp_project/servfunc"
+	//"github.com/jiliaevyp/web_yp_project/servfunc"
 	"github.com/jiliaevyp/web_yp_project/tabel"
 	"html/template"
 	"log"
@@ -68,17 +68,17 @@ var partials = []string{
 	"./static/css/sidebar.partial.tmpl.html",
 }
 var admin struct { // администратор
-	User      string
-	Email     string
-	Passw     string
-	ErrEmail  string // ошибка ввода почты
-	Passpass  string
-	Ready     string // 1 - идентификация прошла
-	Errors    string // "1" - ошибка при вводе полей
-	Empty     string // "1" - остались пустые поля
-	IdMonat   int
-	JetzYahre string
-	JetzMonat string
+	User        string
+	Email       string
+	Passw       string
+	ErrEmail    string // ошибка ввода почты
+	Passpass    string
+	Ready       string // 1 - идентификация прошла
+	Errors      string // "1" - ошибка при вводе полей
+	Empty       string // "1" - остались пустые поля
+	IdRealMonat string
+	Jetzyahre   string
+	Jetzmonat   string
 }
 
 // проверка корректности емайл адреса nameAddress --> "имя <email@mail.com>
@@ -97,23 +97,25 @@ func Server(addrWeb string, db *sql.DB) {
 	http.Handle("/mond_new", http.HandlerFunc(mond.Newhandler(db)))
 	http.Handle("/mond_show", http.HandlerFunc(mond.Showhandler(db)))
 	http.Handle("/mond_edit", http.HandlerFunc(mond.Edithandler(db)))
-	_idMond := 20      //idMond
-	_yahre := "2021"   //yahre
-	_monat := "январь" //monat
-	http.Handle("/personals_index", http.HandlerFunc(personals.Indexhandler(db, _yahre, _monat, _idMond)))
-	http.Handle("/personal_new", http.HandlerFunc(personals.Newhandler(db, yahre, monat, idMond)))
-	http.Handle("/personal_show", http.HandlerFunc(personals.Showhandler(db, yahre, monat, idMond)))
-	http.Handle("/personal_edit", http.HandlerFunc(personals.Edithandler(db, yahre, monat, idMond)))
+	// рабочий месяц
+	admin.IdRealMonat = strconv.Itoa(mond.IdRealMond) //idMond
+	admin.Jetzyahre = mond.Jetzyahre                  //yahre
+	admin.Jetzmonat = mond.Jetzmonat                  // monat
+
+	http.Handle("/personals_index", http.HandlerFunc(personals.Indexhandler(db)))
+	http.Handle("/personal_new", http.HandlerFunc(personals.Newhandler(db)))
+	http.Handle("/personal_show", http.HandlerFunc(personals.Showhandler(db)))
+	http.Handle("/personal_edit", http.HandlerFunc(personals.Edithandler(db)))
 
 	//http.Handle("/worktime_index", http.HandlerFunc(IndexHandler(db)))
 	//http.Handle("/worktime_new", http.HandlerFunc(NewHandler(db)))
 	//http.Handle("/worktime_show", http.HandlerFunc(ShowHandler(db)))
 	//http.Handle("/worktime_edit", http.HandlerFunc(EditHandler(db)))
 	//
-	http.Handle("/tabels_index", http.HandlerFunc(tabel.IndexHandler(db, yahre, monat, idMond)))
-	http.Handle("/tabel_new", http.HandlerFunc(tabel.NewHandler(db, yahre, monat, idMond)))
-	http.Handle("/tabel_show", http.HandlerFunc(tabel.ShowHandler(db, yahre, monat, idMond)))
-	http.Handle("/tabel_edit", http.HandlerFunc(tabel.EditHandler(db, yahre, monat, idMond)))
+	http.Handle("/tabels_index", http.HandlerFunc(tabel.IndexHandler(db)))
+	http.Handle("/tabel_new", http.HandlerFunc(tabel.NewHandler(db)))
+	http.Handle("/tabel_show", http.HandlerFunc(tabel.ShowHandler(db)))
+	http.Handle("/tabel_edit", http.HandlerFunc(tabel.EditHandler(db)))
 	//
 	//http.Handle("/buchtabel_index", http.HandlerFunc(IndexHandler(db)))
 	//http.Handle("/buchtabel_new", http.HandlerFunc(NewHandler(db)))
@@ -121,6 +123,7 @@ func Server(addrWeb string, db *sql.DB) {
 	//http.Handle("/buchtabel_edit", http.HandlerFunc(EditHandler(db)))
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+
 	fmt.Println("Топай на web страницу--->" + addrWeb + "!") // отладочная печать
 	err := http.ListenAndServe(addrWeb, nil)
 
@@ -139,50 +142,10 @@ func Server(addrWeb string, db *sql.DB) {
 
 func indexHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
-		admin.JetzMonat = "???"
-		admin.JetzYahre = "???"
+
 		files := append(partials, "./static/index.html")
 		t, err := template.ParseFiles(files...) // Parse template file.
 
-		_id, ok := req.URL.Query()["id"]
-		fmt.Println("_id =", _id)
-		if ok && len(_id[0]) > 0 {
-			id := _id[0]
-			fmt.Println("id =", id)
-			idMond, err1 := strconv.Atoi(id)
-			if err1 == nil && idMond > 0 { // если id int и id действительный то можно выбрать запись из monds
-				var p frombase
-				row := db.QueryRow("SELECT * FROM monds WHERE id=$1", idMond)
-				err2 := row.Scan( // чтение строки из таблицы
-					&p.id,
-					&p.yahre,
-					&p.nummonat,
-					&p.tag,
-					&p.hour,
-					&p.kf,
-					&p.blmond,
-					&p.bltime,
-					&p.bltabel,
-					&p.blbuch,
-					&p.blpers,
-					&p.monat,
-				)
-				if err2 != nil {
-					fmt.Println("ошибка чтения monds id=", id)
-					//panic(err2)
-				}
-				admin.IdMonat = p.id
-				idMond = p.id
-				admin.JetzMonat = p.monat
-				admin.JetzYahre = strconv.Itoa(p.yahre)
-				yahre = admin.JetzYahre
-				monat = admin.JetzMonat
-				fmt.Println(p, idMond, yahre, monat)
-			}
-		} else {
-			admin.JetzMonat = "???"
-			admin.JetzYahre = "???"
-		}
 		exit, ok := req.URL.Query()["exit"]
 		if ok && len(exit[0]) > 0 {
 			_exit := exit[0]
@@ -191,9 +154,9 @@ func indexHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 				admin.Email = ""
 				admin.Passw = ""
 				admin.Ready = "0"
-				admin.JetzMonat = "???"
-				admin.JetzYahre = "???"
-				admin.IdMonat = 0 // год месяц не выбран
+				admin.Jetzmonat = "???"
+				admin.Jetzyahre = "???"
+				admin.IdRealMonat = "0" // год месяц не выбран
 				idMond = 0
 			}
 		}
@@ -233,6 +196,8 @@ func indexHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 				admin.Ready = "1"
 			}
 		}
+		admin.Jetzyahre = mond.Jetzyahre
+		admin.Jetzmonat = mond.Jetzmonat
 		err = t.ExecuteTemplate(w, "base", admin)
 		if err != nil {
 			log.Println(err.Error())

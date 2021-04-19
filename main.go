@@ -7,9 +7,6 @@ import (
 	"github.com/jiliaevyp/web_yp_project/server"
 	"github.com/jiliaevyp/web_yp_project/servfunc"
 	_ "github.com/lib/pq"
-	"net"
-	"os"
-	"strconv"
 )
 
 var (
@@ -20,94 +17,9 @@ var (
 )
 
 const (
-	answerServer     = "Hello, I am a server."
-	readyServer      = "I'm ready!"
-	defaultNet       = "tcp"
-	defaultIp        = "192.168.1.101"
-	defaultLocalhost = "localhost"
-	defaultPort      = "8181"
+	answerServer = "Hello, I am a server."
+	readyServer  = "I'm ready!"
 )
-
-// проверка на ввод  'Y = 1
-//func yesNo() int {
-//	var yesNo string
-//	len := 4
-//	data := make([]byte, len)
-//	n, err := os.Stdin.Read(data)
-//	yesNo = string(data[0 : n-1])
-//	if err == nil && (yesNo == "Y" || yesNo == "y" || yesNo == "Н" || yesNo == "н") {
-//		return 1
-//	} else {
-//		return 0
-//	}
-//}
-//
-//// ввод  IP адреса сервера
-//func inpIP() (string, int) {
-//	data := ""
-//	err := 1
-//	for err == 1 {
-//		fmt.Print("Локальный сервера по умолчанию:	", defaultLocalhost, "\n", "Для изменения нажмите 'Y' ")
-//		yes := yesNo()
-//		if yes != 1 {
-//			data = defaultLocalhost
-//			err = 0
-//		} else {
-//			for err == 1 {
-//				fmt.Print("IP адрес сервера по умолчанию:	", defaultIp, "\n", "Для изменения нажмите 'Y' ")
-//				yes := yesNo()
-//				if yes != 1 {
-//					data = defaultIp
-//					err = 0
-//				} else {
-//					fmt.Println("Введите IP адрес сервера:	")
-//					fmt.Scanf(
-//						"%s\n",
-//						&data,
-//					)
-//					iperr := net.ParseIP(data)
-//					if iperr == nil {
-//						fmt.Println(ErrInvalidIPaddress)
-//						return data, 1
-//					} else {
-//						err = 0
-//					}
-//				}
-//			}
-//		}
-//	}
-//	return data, err
-//}
-//
-////ввод порта сервера
-//func inpPort() (string, int) {
-//	var (
-//		webPort string
-//	)
-//	err := 1
-//	for err == 1 {
-//		fmt.Print("Порт по умолчанию:	", defaultPort, "\n", "Для изменения нажмите 'Y' ")
-//		yes := yesNo()
-//		if yes != 1 {
-//			webPort = defaultPort
-//			err = 0
-//		} else {
-//			fmt.Print("Введите порт:	")
-//			fmt.Scanf(
-//				"%s\n",
-//				&webPort,
-//			)
-//			res, err1 := strconv.ParseFloat(webPort, 16)
-//			res = res + 1
-//			err = 0
-//			if err1 != nil {
-//				fmt.Println(ErrInvalidPort)
-//				return ":" + webPort, 1
-//			}
-//		}
-//	}
-//	return webPort, 0
-//}
 
 func main() {
 	var (
@@ -158,7 +70,7 @@ func main() {
 		fmt.Println("-------------------------------------------------")
 		fmt.Print("Запускаю сервер? (Y)   ")
 		fmt.Println("Отменить?  (Enter)")
-		yes = yesNo() //yesNo()
+		yes = servfunc.YesNo() //yesNo()
 		if yes == 1 {
 			go server.Server(addrWeb, db)
 			if server.Erserv != 0 {

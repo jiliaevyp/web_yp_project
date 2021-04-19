@@ -2,8 +2,12 @@ package tabel
 
 import (
 	"database/sql"
+	//"debug/dwarf"
 	"fmt"
-	"github.com/jiliaevyp/web_yp_project/servfunc"
+	"github.com/jiliaevyp/web_yp_project/mond"
+
+	//"github.com/jiliaevyp/web_yp_project/servfunc"
+	"github.com/jiliaevyp/web_yp_project/personals"
 	"html/template"
 	"log"
 	"net/http"
@@ -89,16 +93,32 @@ type frombase struct { // строка  при чтении/записи из/в
 	mondsID     int
 	personalsID int
 }
+type mondfrombase struct { // для чтения из таблицы monds
+	id       int
+	yahre    int
+	nummonat int
+	tag      int
+	hour     int
+	kf       int
+	blmond   int
+	bltime   int
+	bltabel  int
+	blbuch   int
+	blpers   int
+	monat    string
+}
 
 var tabtable struct {
 	Ready       string
 	Jetzyahre   string
 	Jetzmonat   string
+	Tag         string
+	Hour        string
 	Department  string
 	Tabelstable []tabel // таблица по сотрудниам  в personals_index.html
 }
 
-func IndexHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func(w http.ResponseWriter, req *http.Request) {
+func IndexHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/tabels_index.html")
@@ -118,7 +138,39 @@ func IndexHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fu
 			}
 		}
 		tabtable.Tabelstable = nil
+		// выборка записи из monds по IdRealMond
+		idrealmond := mond.IdRealMond
+		if idrealmond > 0 {
+			row := db.QueryRow("SELECT * FROM monds WHERE id=$1", idrealmond)
+			var p mondfrombase
+			err = row.Scan( // чтение строки из таблицы
+				&p.id,
+				&p.yahre,
+				&p.nummonat,
+				&p.tag,
+				&p.hour,
+				&p.kf,
+				&p.blmond,
+				&p.bltime,
+				&p.bltabel,
+				&p.blbuch,
+				&p.blpers,
+				&p.monat,
+			)
+			if err != nil {
+				fmt.Println("ошибка распаковки строки show")
+				tabtable.Jetzyahre = " "
+				tabtable.Jetzmonat = "рабочий месяц не выбран!"
+				panic(err)
+			} else {
+				tabtable.Jetzyahre = mond.Jetzyahre
+				tabtable.Jetzmonat = mond.Jetzmonat
+				tabtable.Tag = strconv.Itoa(p.tag)
+				tabtable.Hour = strconv.Itoa(p.hour)
+			}
+		}
 
+		// выборка таблицы tabel
 		rows, err1 := db.Query(`SELECT * FROM tabels ORDER BY title`)
 		if err1 != nil {
 			fmt.Println(" table tabels ошибка чтения ")
@@ -186,8 +238,9 @@ func IndexHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fu
 			tabtable.Tabelstable = append(tabtable.Tabelstable, tabelhtml)
 		}
 		tabtable.Ready = "1"
-		tabtable.Jetzyahre = jetzYahre
-		tabtable.Jetzmonat = jetzMonat
+		tabtable.Jetzyahre = mond.Jetzyahre
+		tabtable.Jetzmonat = mond.Jetzmonat
+
 		err = t.ExecuteTemplate(w, "base", tabtable)
 		if err != nil {
 			log.Println(err.Error())
@@ -197,7 +250,7 @@ func IndexHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fu
 	}
 }
 
-func ShowHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func(w http.ResponseWriter, req *http.Request) {
+func ShowHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/tabel_show.html")
@@ -264,8 +317,10 @@ func ShowHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fun
 		tabelhtml.Errors = "0"   // "1" - ошибка при вводе полей
 		tabelhtml.Empty = "0"    // "1" - остались пустые поля
 		tabelhtml.ErrRange = "0" // "1" - выход за пределы диапазона
-		tabtable.Jetzyahre = jetzYahre
-		tabtable.Jetzmonat = jetzMonat
+
+		tabtable.Jetzyahre = mond.Jetzyahre
+		tabtable.Jetzmonat = mond.Jetzmonat
+
 		err = t.ExecuteTemplate(w, "base", tabelhtml)
 		if err != nil {
 			log.Println(err.Error())
@@ -275,7 +330,7 @@ func ShowHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fun
 	}
 }
 
-func EditHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func(w http.ResponseWriter, req *http.Request) {
+func EditHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		var tabelhtml tabel // переменная по сотруднику при вводе и отображении в personal.HTML
 		//var tabrow _tabelrow
@@ -287,6 +342,9 @@ func EditHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fun
 			http.Error(w, "Mond Internal Server ParseFiles Error", http.StatusInternalServerError)
 			return
 		}
+		tabtable.Jetzyahre = mond.Jetzyahre
+		tabtable.Jetzmonat = mond.Jetzmonat
+
 		err = t.ExecuteTemplate(w, "base", tabelhtml)
 		if err != nil {
 			log.Println(err.Error())
@@ -296,7 +354,7 @@ func EditHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) fun
 	}
 }
 
-func NewHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func(w http.ResponseWriter, req *http.Request) {
+func NewHandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 
 		files := append(partials, "./static/tabel_new.html")
@@ -350,8 +408,9 @@ func NewHandler(db *sql.DB, jetzYahre string, jetzMonat string, idMond int) func
 			//	panic(err2)
 			//}
 		}
-		tabtable.Jetzyahre = jetzYahre
-		tabtable.Jetzmonat = jetzMonat
+		tabtable.Jetzyahre = mond.Jetzyahre
+		tabtable.Jetzmonat = mond.Jetzmonat
+
 		err1 := t.ExecuteTemplate(w, "base", tabelhtml)
 		if err1 != nil {
 			log.Println(err1.Error())

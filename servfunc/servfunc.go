@@ -1,6 +1,7 @@
 package servfunc
 
 import (
+	"errors"
 	"fmt"
 	"github.com/ttacon/libphonenumber"
 	"net"
@@ -9,6 +10,46 @@ import (
 	"os"
 	"strconv"
 )
+
+const (
+	answerServer     = "Hello, I am a server."
+	readyServer      = "I'm ready!"
+	defaultNet       = "tcp"
+	defaultIp        = "192.168.1.101"
+	defaultLocalhost = "localhost"
+	defaultPort      = "8181"
+)
+
+var (
+	IPaddrWeb, addrWeb, webPort string
+	errserv                     int
+	ErrInvalidPort              = errors.New("invalid port number")
+	ErrInvalidIPaddress         = errors.New("invalid IP address")
+)
+
+type person struct { // данные по сотруднику при вводе и отображении в personal.HTML
+	Id         string
+	Forename   string
+	Title      string
+	Kadr       string
+	Numotdel   string
+	Department string
+	Email      string
+	Phone      string
+	Address    string
+	Tarif      string // почасовая руб
+	Jetzyahre  string
+	Jetzmonat  string
+	Ready      string // "1" - ввод корректен
+	Errors     string // "1" - ошибка при вводе полей
+	ErrPhone   string // "1"- ошибка при вводе телефона
+	ErrEmail   string // "1"- ошибка при вводе email
+	//ErrTitle  string // "1"- ошибка при вводе title
+	ErrTarif  string // "1"- ошибка при вводе тарифа
+	ErrNumotd string // "1"- ошибка при вводе номера отдела
+	Empty     string // "1" - остались пустые поля
+	ErrRange  string // "1" - выход за пределы диапазона
+}
 
 // проверка корректности емайл адреса nameAddress --> "имя <email@mail.com>
 func InpMailAddress(nameAddress string) (err int, email string, title string) {
@@ -53,14 +94,14 @@ func InpIP() (string, int) {
 	err := 1
 	for err == 1 {
 		fmt.Print("Локальный сервера по умолчанию:	", defaultLocalhost, "\n", "Для изменения нажмите 'Y' ")
-		yes := yesNo()
+		yes := YesNo()
 		if yes != 1 {
 			data = defaultLocalhost
 			err = 0
 		} else {
 			for err == 1 {
 				fmt.Print("IP адрес сервера по умолчанию:	", defaultIp, "\n", "Для изменения нажмите 'Y' ")
-				yes := yesNo()
+				yes := YesNo()
 				if yes != 1 {
 					data = defaultIp
 					err = 0
@@ -92,7 +133,7 @@ func InpPort() (string, int) {
 	err := 1
 	for err == 1 {
 		fmt.Print("Порт по умолчанию:	", defaultPort, "\n", "Для изменения нажмите 'Y' ")
-		yes := yesNo()
+		yes := YesNo()
 		if yes != 1 {
 			webPort = defaultPort
 			err = 0
@@ -144,19 +185,19 @@ func ReadFromHtml(p *person, req *http.Request) {
 func CheckNumer(personalhtml *person) int {
 	var err int
 	errout := 0
-	err = checknum(personalhtml.Tarif, 10, 1000)
+	err = Checknum(personalhtml.Tarif, 10, 1000)
 	if err != 0 {
 		personalhtml.ErrRange = "1"
 		personalhtml.ErrTarif = "1"
 		errout = 1
 	}
-	err = checknum(personalhtml.Numotdel, 0, 20)
+	err = Checknum(personalhtml.Numotdel, 0, 20)
 	if err != 0 {
 		personalhtml.ErrRange = "1"
 		personalhtml.ErrNumotd = "1"
 		errout = 1
 	}
-	err, personalhtml.Email, _ = inpMailAddress(personalhtml.Title + "<" + personalhtml.Email + ">") // проверка email адреса
+	err, personalhtml.Email, _ = InpMailAddress(personalhtml.Title + "<" + personalhtml.Email + ">") // проверка email адреса
 	if err > 0 {
 		personalhtml.ErrEmail = "1"
 		errout = 1

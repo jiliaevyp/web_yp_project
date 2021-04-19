@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	_ "errors"
 	"fmt"
-	"github.com/jiliaevyp/web_yp_project/servfunc"
+	//"github.com/jiliaevyp/web_yp_project/servfunc"
 	"html/template"
 	"log"
 	"net/http"
@@ -52,26 +52,28 @@ var monatArray = [12]string{
 	"декабрь",
 }
 
-type monat struct { // данные по месяцу при вводе и отображении в mond.HTML
-	Id       string
-	Yahre    string
-	Nummonat string
-	Monat    string
-	Tag      string
-	Hour     string
-	Kf       string
-	Blmond   string
-	Blpers   string
-	Bltime   string
-	Bltabel  string
-	Blbuch   string
-	Ready    string // "1" - ввод корректен
-	Errors   string // "1" - ошибка при вводе полей
-	Empty    string // "1" - остались пустые поля
-	ErrRange string // "1" - выход за пределы диапазона
+type Monat struct { // данные по месяцу при вводе и отображении в mond.HTML
+	Id        string
+	Yahre     string
+	Nummonat  string
+	Monat     string
+	Tag       string
+	Hour      string
+	Kf        string
+	Blmond    string
+	Blpers    string
+	Bltime    string
+	Bltabel   string
+	Blbuch    string
+	Ready     string // "1" - ввод корректен
+	Errors    string // "1" - ошибка при вводе полей
+	Empty     string // "1" - остались пустые поля
+	ErrRange  string // "1" - выход за пределы диапазона
+	Jetzmonat string // если id==0 значит месяц не выбран
+	Jetzyahre string
 }
 
-type frombase struct { // для чтения из таблицы monds
+type Mondfrombase struct { // для чтения из таблицы monds
 	id       int
 	yahre    int
 	nummonat int
@@ -86,24 +88,22 @@ type frombase struct { // для чтения из таблицы monds
 	monat    string
 }
 
-var mondtable struct {
-	Ready      string  // флаг готовности
-	Mondstable []monat // таблица по сотрудниам  в monds_index.html
-}
+//============================================================================
+var (
+	IdRealMond int    // id текущего рабочего месяца для всех таблиц
+	Jetzmonat  string // если id==0 значит месяц не выбран
+	Jetzyahre  string
+)
 
-//// валидация  числовых вводов и диапазонов
-//func checknum(checknum string, min int, max int) int {
-//	num, err := strconv.Atoi(checknum)
-//	if err != nil {
-//		return 1
-//	} else {
-//		if num >= min && num <= max {
-//			return 0
-//		} else {
-//			return 1
-//		}
-//	}
-//}
+//============================================================================
+
+var mondtable struct {
+	Ready      string // флаг готовности
+	IdRealMond string
+	Jetzmonat  string
+	Jetzyahre  string
+	Mondstable []Monat // таблица по сотрудниам  в monds_index.html
+}
 
 // просмотр таблицы monds из geoplastdb
 func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
@@ -116,7 +116,7 @@ func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, "Internal Server ParseFiles Error", http.StatusInternalServerError)
 			return
 		}
-		// обработка key  del & id
+		// обработка key  del & id ---> удаление записи
 		del := req.URL.Query().Get("del")
 		idhtml := req.URL.Query().Get("id")
 		id, _ := strconv.Atoi(idhtml)
@@ -127,15 +127,60 @@ func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			}
 		}
 		mondtable.Mondstable = nil
-
+		// выборка всей таблицы
 		rows, err1 := db.Query(`SELECT * FROM monds ORDER BY nummonat`)
 		if err1 != nil {
 			fmt.Println(" table monds ошибка чтения ")
 			panic(err1)
 		}
+		var p Mondfrombase
+		// установка текущего рабочего месяца
+		// обработка key=="idrealmond" при срабатывании в mond_show кнопки
+		// <button class="button"> <a href= "/monds_index?idrealmond={{ .Id}}" >Назначить рабочим</a></button>
+		idmondfromshow := req.URL.Query().Get("idrealmond")
+		if idmondfromshow != "" {
+			// если была нажата кнопка то идет выбор рабочего месяца
+			//fmt.Println("idrealmond=", idmondfromshow)
+			IdRealMond, err = strconv.Atoi(idmondfromshow)
+			if err != nil {
+				IdRealMond = 0
+				mondtable.IdRealMond = "0"
+				mondtable.Jetzyahre = "не выбран!"
+				mondtable.Jetzmonat = "не выбран"
+				Jetzyahre = "не выбран!"
+				Jetzmonat = "не выбран"
+			} else {
+				row := db.QueryRow("SELECT * FROM monds WHERE id=$1", IdRealMond)
+				err = row.Scan( // чтение строки из таблицы
+					&p.id,
+					&p.yahre,
+					&p.nummonat,
+					&p.tag,
+					&p.hour,
+					&p.kf,
+					&p.blmond,
+					&p.bltime,
+					&p.bltabel,
+					&p.blbuch,
+					&p.blpers,
+					&p.monat,
+				)
+				if err != nil {
+					fmt.Println("ошибка распаковки строки IdRealMond")
+					panic(err)
+				} else {
+					mondtable.IdRealMond = strconv.Itoa(p.id)
+					mondtable.Jetzyahre = strconv.Itoa(p.yahre)
+					mondtable.Jetzmonat = p.monat
+
+					IdRealMond = p.id // глобальная id для модулей personals tabels
+					Jetzyahre = mondtable.Jetzyahre
+					Jetzmonat = mondtable.Jetzmonat
+				}
+			}
+		}
 		defer rows.Close()
 		for rows.Next() {
-			var p frombase
 			err = rows.Scan( // пересылка  данных строки базы personals в "p"
 				&p.id,
 				&p.yahre,
@@ -155,7 +200,7 @@ func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 				panic(err)
 				return
 			}
-			var monatlhtml monat
+			var monatlhtml Monat
 			monatlhtml.Id = strconv.Itoa(p.id)
 			monatlhtml.Yahre = strconv.Itoa(p.yahre)
 			monatlhtml.Nummonat = strconv.Itoa(p.nummonat)
@@ -172,6 +217,9 @@ func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			mondtable.Mondstable = append(mondtable.Mondstable, monatlhtml)
 		}
 		mondtable.Ready = "1"
+		mondtable.Jetzyahre = Jetzyahre
+		mondtable.Jetzmonat = Jetzmonat
+
 		err = t.ExecuteTemplate(w, "base", mondtable)
 		if err != nil {
 			log.Println(err.Error())
@@ -192,13 +240,12 @@ func Showhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, "Internal Server ParseFiles Error", http.StatusInternalServerError)
 			return
 		}
-		var monathtml monat
+		var monathtml Monat
 		monathtml.Ready = "0" // 1 - ввод успешный
-		//realIdMonat := req.URL.Query().Get("realIdMonat")
 		idhtml := req.URL.Query().Get("id")
 		id, _ := strconv.Atoi(idhtml)
 		row := db.QueryRow("SELECT * FROM monds WHERE id=$1", id)
-		var p frombase
+		var p Mondfrombase
 		err = row.Scan( // чтение строки из таблицы
 			&p.id,
 			&p.yahre,
@@ -218,7 +265,7 @@ func Showhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			panic(err)
 		}
 		// подготовка HTML
-		var monatlhtml monat
+		var monatlhtml Monat
 		monatlhtml.Id = strconv.Itoa(p.id)
 		monatlhtml.Yahre = strconv.Itoa(p.yahre)
 		monatlhtml.Nummonat = strconv.Itoa(p.nummonat)
@@ -231,6 +278,9 @@ func Showhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 		monatlhtml.Bltabel = strconv.Itoa(p.bltabel)
 		monatlhtml.Blbuch = strconv.Itoa(p.blbuch)
 		monatlhtml.Blpers = strconv.Itoa(p.blpers)
+
+		monathtml.Jetzmonat = Jetzmonat
+		monathtml.Jetzyahre = Jetzyahre
 		err = t.ExecuteTemplate(w, "base", monatlhtml)
 		if err != nil {
 			log.Println(err.Error())
@@ -251,14 +301,14 @@ func Newhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, "Internal Server ParseFiles Error personalNewhandler", http.StatusInternalServerError)
 			return
 		}
-		var monathtml monat
+		var monathtml Monat
 		if req.Method == "POST" {
 			req.ParseForm()
 			monathtml.Ready = "0" // 1 - ввод успешный
 			monathtml.Errors = "0"
 			monathtml.Yahre = req.Form["yahre"][0]
 			monathtml.Nummonat = req.Form["nummonat"][0]
-			monathtml.Monat = req.Form["monat"][0]
+			monathtml.Monat = req.Form["Monat"][0]
 			monathtml.Tag = req.Form["tag"][0]
 			monathtml.Hour = req.Form["hour"][0]
 			monathtml.Kf = req.Form["kf"][0]
@@ -268,7 +318,7 @@ func Newhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			monathtml.Blbuch = req.Form["blbuch"][0]
 			monathtml.Blpers = req.Form["blpers"][0]
 			// перевод в int для базы
-			var p frombase
+			var p Mondfrombase
 			p.yahre, _ = strconv.Atoi(monathtml.Yahre)
 			p.nummonat, _ = strconv.Atoi(monathtml.Nummonat)
 			p.monat = monathtml.Monat //monatArray[p.nummonat-1]
@@ -286,7 +336,7 @@ func Newhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 				fmt.Println("Ошибка при удалении старой записи в monds nummonat = ", nummonat)
 				panic(err1)
 			}
-			sqlStatement := `INSERT INTO monds (yahre,nummonat,tag,hour,kf,blmond,bltime,bltabel,blbuch,blpers,monat) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`
+			sqlStatement := `INSERT INTO monds (yahre,nummonat,tag,hour,kf,blmond,bltime,bltabel,blbuch,blpers,Monat) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`
 			_, err2 := db.Exec(sqlStatement,
 				&p.yahre,
 				&p.nummonat,
@@ -308,6 +358,8 @@ func Newhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 				//row := db.QueryRow("returning id")
 			}
 		}
+		monathtml.Jetzmonat = Jetzmonat
+		monathtml.Jetzyahre = Jetzyahre
 		err3 := t.ExecuteTemplate(w, "base", monathtml)
 		if err3 != nil {
 			log.Println(err.Error())
@@ -333,7 +385,7 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 		id, _ := strconv.Atoi(idhtml)
 		row := db.QueryRow("SELECT * FROM monds WHERE id=$1", id)
 		// выборка записи из таблицы
-		var p frombase
+		var p Mondfrombase
 		err = row.Scan(
 			&p.id,
 			&p.yahre,
@@ -350,7 +402,7 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 		)
 		if err == nil {
 			// подготовка HTML
-			var monathtml monat
+			var monathtml Monat
 			monathtml.Ready = "0" // "1" - ввод корректен
 			monathtml.Id = strconv.Itoa(p.id)
 			monathtml.Yahre = strconv.Itoa(p.yahre)
@@ -370,7 +422,7 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 				monathtml.Errors = "0" // 1 - ввод успешный
 				monathtml.Yahre = req.Form["yahre"][0]
 				monathtml.Nummonat = req.Form["nummonat"][0]
-				monathtml.Monat = req.Form["monat"][0]
+				monathtml.Monat = req.Form["Monat"][0]
 				monathtml.Tag = req.Form["tag"][0]
 				monathtml.Hour = req.Form["hour"][0]
 				monathtml.Kf = req.Form["kf"][0]
@@ -380,7 +432,7 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 				monathtml.Blbuch = req.Form["blbuch"][0]
 				monathtml.Blpers = req.Form["blpers"][0]
 				// перевод в int для базы
-				var p frombase
+				var p Mondfrombase
 				p.id, _ = strconv.Atoi(monathtml.Id)
 				p.yahre, _ = strconv.Atoi(monathtml.Yahre)
 				p.nummonat, _ = strconv.Atoi(monathtml.Nummonat)
@@ -399,7 +451,7 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 				//	fmt.Println("Ошибка при удалении старой записи в monds id = ", id)
 				//	panic(err1)
 				//}
-				sqlStatement := `INSERT INTO monds (id,yahre,nummonat,tag,hour,kf,blmond,bltime,bltabel,blbuch,blpers,monat) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`
+				sqlStatement := `INSERT INTO monds (id,yahre,nummonat,tag,hour,kf,blmond,bltime,bltabel,blbuch,blpers,Monat) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`
 				_, err2 := db.Exec(sqlStatement,
 					&p.id,
 					&p.yahre,
@@ -423,6 +475,8 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 					monathtml.Ready = "1"
 				}
 			}
+			monathtml.Jetzmonat = Jetzmonat
+			monathtml.Jetzyahre = Jetzyahre
 			err3 := t.ExecuteTemplate(w, "base", monathtml)
 			if err3 != nil {
 				log.Println(err.Error())
