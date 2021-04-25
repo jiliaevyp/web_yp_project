@@ -11,13 +11,12 @@
         <tr><td>2</td><td>Фамилия</td>   <td align="center"> {{.Title}}  </td></tr>
         <tr><td>3</td><td>Должность</td> <td align="center"> {{.Kadr}}   </td></tr>
         <tr><td>4</td><td>Отдел</td>     <td align="center"> {{.Department}}  </td></tr>
+        <tr><td>4</td><td>В табель</td>  <td align="center"> {{ if eq .Real "1"}} Включен {{else}} не включен {{end}} </td></tr>
         <tr><td>3</td><td>Тариф</td>     <td align="center"> {{.Tarif}}   </td></tr>
         <tr><td>5</td><td>Е-майл</td>    <td align="center"> {{.Email}}  </td></tr>
-        <tr><td>6</td><td>Телефон</td>   <td align="center"> {{.Phone}}  </td></tr>
-        <tr><td>7</td><td>Адрес</td>     <td align="center"> {{.Address}}</td></tr>
         </tbody>
     </table><br>
-    <button class="button"> <a href= "/personal_edit?id={{.Id}}" >Изменить</a></button>
+    <button class="button"> <a href= "/personal_edit?Id={{.Id}}" >Изменить</a></button>
     </strong>
     {{else}}
         {{ if eq .Empty "1" }}
@@ -27,9 +26,6 @@
                 Ошибки при вводе данных! <br>
                 {{ if eq .ErrEmail "1" }}
                 Электронная почта некорректна! <br>
-                {{end}}
-                {{ if eq .ErrPhone "1" }}
-                Телефонный номер некорректен! <br>
                 {{end}}
                 {{ if eq .ErrRange "1" }}
                 Тариф некорректен! <br>
@@ -44,9 +40,9 @@
             <th> №</th><th>Наименование</th><th>Значение</th>
             </thead>
             <tbody>
-            <tr><td>1</td><td>Фамилия</td>      <td align="center"><input name="title" value= {{.Title}} autocomplete="on"></td></tr>
-            <tr><td>2</td><td>Имя</td>          <td align="center"><input name="forename" value= {{.Forename}} autocomplete="on"></td></tr>
-            <tr><td>3</td><td>Должность</td>    <td align="center"><select size="1" name="kadr" required >
+            <tr><td>1</td><td>Фамилия</td>      <td align="center"><input name="Title" value= {{.Title}} autocomplete="on"></td></tr>
+            <tr><td>2</td><td>Имя</td>          <td align="center"><input name="Forename" value= {{.Forename}} autocomplete="on"></td></tr>
+            <tr><td>3</td><td>Должность</td>    <td align="center"><select size="1" name="Kadr" required >
                 <option value={{.Kadr}}>{{.Kadr}}</option>
                 <option value="Инженер">Инженер</option>
                 <option value="Менеджер">Менеджер</option>
@@ -55,8 +51,8 @@
                 <option value="Директор">Директор</option>
             </select></p>
             </td></tr>
-            <tr><td>4</td><td>Номер отдела</td> <td align="center"><input name="numotdel" value= {{.Numotdel}}></td></tr>
-            <tr><td>3</td><td>Отдел</td>    <td align="center"><select size="1" name="department" value= {{.Department}} required >
+            <tr><td>4</td><td>Номер отдела</td> <td align="center"><input name="Numotdel" value= {{.Numotdel}}></td></tr>
+            <tr><td>3</td><td>Отдел</td>    <td align="center"><select size="1" name="Department" value= {{.Department}} required >
                 <option value={{.Department}}>{{.Department}}</option>
                 <option value="Административный">Административный</option>
                 <option value="Бухгалтерия">Бухгалтерия</option>
@@ -64,13 +60,15 @@
                 <option value="Производственный">Производственный</option>
                 <option value="Конструкторский">Конструкторский</option>
             </select></p>
-            <tr><td>3</td><td>Тариф</td>        <td align="center"><input type="number" name="tarif" value= {{.Tarif}} min="100" max="500" step="10"></td></tr>
-            <tr><td>5</td><td>Е-майл</td>       <td align="center"><input type="email" name="email" value= {{.Email}} autocomplete="on"></td></tr>
-            <tr><td>6</td><td>Телефон</td>      <td align="center"><input type="phone" name="phone" value= {{.Phone}} autocomplete="on"></td></tr>
-            <tr><td>7</td><td>Адрес</td>        <td align="center"><input name="address" value= {{.Address}} autocomplete="on" ></td></tr>
+            <tr><td>4</td><td>Включить в табель</td> <td align="center"><select size="1" name="Real" required >
+                <option value={{.Real}}>{{.Real}}</option>
+                <option value="Включить">1</option>
+                <option value="Не включать">0</option>
+            <tr><td>3</td><td>Тариф</td>        <td align="center"><input type="number" name="Tarif" value= {{.Tarif}} min="100" max="500" step="10"></td></tr>
+            <tr><td>7</td><td>Адрес</td>        <td align="center"><input name="Address" value= {{.Address}} autocomplete="on" ></td></tr>
             </tbody>
         </table><br>
-        <button class="submit" align="center"><input type="submit" formaction="/personal_edit?id={{.Id}}" align="center" value="Ввести"></button>
+        <button class="submit" align="center"><input type="submit" formaction="/personal_edit?Id={{.Id}}" align="center" value="Ввести"></button>
     </strong>
     </form>
     {{end}}

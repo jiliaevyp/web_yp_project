@@ -8,7 +8,6 @@ import (
 	"github.com/jiliaevyp/web_yp_project/servfunc"
 	_ "github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
-	"github.com/ttacon/libphonenumber"
 	_ "go/parser"
 	"html/template"
 	"log"
@@ -52,6 +51,19 @@ var Department = []string{
 	"неизвестный",
 }
 
+type Tabel struct {
+	PersonId   int
+	MondId     int
+	Forename   string
+	Title      string
+	Kadr       string
+	Numotdel   int
+	Department string
+	Email      string
+}
+
+//var Newtabel []Tabel		// таблица нового табеля
+
 type person struct { // данные по сотруднику при вводе и отображении в personal.HTML
 	Id         string
 	Forename   string
@@ -60,33 +72,30 @@ type person struct { // данные по сотруднику при вводе
 	Numotdel   string
 	Department string
 	Email      string
-	Phone      string
-	Address    string
 	Tarif      string // почасовая руб
+	Real       string // "1" - включен в табель
 	Ready      string // "1" - ввод корректен
 	Errors     string // "1" - ошибка при вводе полей
-	ErrPhone   string // "1"- ошибка при вводе телефона
-	ErrEmail   string // "1"- ошибка при вводе email
-	//ErrTitle  string // "1"- ошибка при вводе title
-	ErrTarif  string // "1"- ошибка при вводе тарифа
-	ErrNumotd string // "1"- ошибка при вводе номера отдела
-	Empty     string // "1" - остались пустые поля
-	ErrRange  string // "1" - выход за пределы диапазона
-	Jetzyahre string // для sidebar
-	Jetzmonat string // для sidebar
+	ErrEmail   string // "1"- ошибка при вводе Email
+	ErrTitle   string // "1"- ошибка при вводе Title
+	ErrTarif   string // "1"- ошибка при вводе тарифа
+	ErrNumotd  string // "1"- ошибка при вводе номера отдела
+	Empty      string // "1" - остались пустые поля
+	ErrRange   string // "1" - выход за пределы диапазона
+	Jetzyahre  string // для sidebar
+	Jetzmonat  string // для sidebar
 }
 
-type frombase struct { // строка  при чтении/записи из/в базы personaldb
-	id         int
-	forename   string
-	title      string
-	kadr       string
-	numotdel   int
-	email      string
-	phone      string
-	address    string
-	tarif      int // почасовая руб
-	department string
+type Personfrombase struct { // строка  при чтении/записи из/в базы personaldb
+	Id         int
+	Forename   string
+	Title      string
+	Kadr       string
+	Numotdel   int
+	Email      string
+	Tarif      int // почасовая руб
+	Department string
+	Real       int // 1 - включен в табель
 }
 
 var (
@@ -105,8 +114,7 @@ func makeReadyHtml(p *person) {
 	p.Errors = "0"    // 1 - ошибки при вводе
 	p.Empty = "0"     // 1 - есть пустые поля
 	p.ErrRange = "0"  // 1 - выход за пределы диапазона
-	p.ErrPhone = "0"  // 1 - ошибка в тлф номере
-	p.ErrEmail = "0"  // 1 - ошибка в email
+	p.ErrEmail = "0"  // 1 - ошибка в Email
 	p.ErrTarif = "0"  // 1 - ошибка в тарифе
 	p.ErrNumotd = "0" // 1 - ошибка в номере отдела
 	return
@@ -140,20 +148,20 @@ func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			fmt.Println(" table Personals ошибка чтения ")
 			panic(err1)
 		}
+
 		defer rows.Close()
 		for rows.Next() {
-			var p frombase
+			var p Personfrombase
 			err = rows.Scan( // пересылка  данных строки базы personals в "p"
-				&p.id,
-				&p.title,
-				&p.forename,
-				&p.kadr,
-				&p.numotdel,
-				&p.tarif,
-				&p.email,
-				&p.phone,
-				&p.address,
-				&p.department,
+				&p.Id,
+				&p.Title,
+				&p.Forename,
+				&p.Kadr,
+				&p.Numotdel,
+				&p.Tarif,
+				&p.Email,
+				&p.Department,
+				&p.Real,
 			)
 			if err != nil {
 				fmt.Println("indexPersonals ошибка распаковки строки ")
@@ -161,16 +169,14 @@ func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 				return
 			}
 			var personalhtml person
-			personalhtml.Id = strconv.Itoa(p.id)
-			personalhtml.Forename = p.forename
-			personalhtml.Title = p.title
-			personalhtml.Kadr = p.kadr
-			personalhtml.Tarif = strconv.Itoa(p.tarif) // int ---> string for HTML
-			personalhtml.Numotdel = strconv.Itoa(p.numotdel)
-			personalhtml.Department = p.department
-			personalhtml.Email = p.email
-			personalhtml.Phone = p.phone
-			personalhtml.Address = p.address
+			personalhtml.Id = strconv.Itoa(p.Id)
+			personalhtml.Forename = p.Forename
+			personalhtml.Title = p.Title
+			personalhtml.Kadr = p.Kadr
+			personalhtml.Tarif = strconv.Itoa(p.Tarif) // int ---> string for HTML
+			personalhtml.Numotdel = strconv.Itoa(p.Numotdel)
+			personalhtml.Department = p.Department
+			personalhtml.Email = p.Email
 			personalhtml.Ready = "1"
 			personalhtml.Errors = "0"
 			personalhtml.Empty = "0"
@@ -207,8 +213,7 @@ func Showhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 		personalhtml.Errors = "0"    // 1 - ошибки при вводе
 		personalhtml.Empty = "0"     // 1 - есть пустые поля
 		personalhtml.ErrRange = "0"  // 1 - выход за пределы диапазона
-		personalhtml.ErrPhone = "0"  // 1 - ошибка в тлф номере
-		personalhtml.ErrEmail = "0"  // 1 - ошибка в email
+		personalhtml.ErrEmail = "0"  // 1 - ошибка в Email
 		personalhtml.ErrTarif = "0"  // 1 - ошибка в тарифе
 		personalhtml.ErrNumotd = "0" // 1 - ошибка в номере отдела
 
@@ -216,33 +221,30 @@ func Showhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 		id, _ := strconv.Atoi(idhtml)
 		row := db.QueryRow("SELECT * FROM personals WHERE id=$1", id)
 
-		var p frombase
+		var p Personfrombase
 		err = row.Scan( // чтение строки из таблицы
-			&p.id, // int
-			&p.title,
-			&p.forename,
-			&p.kadr,
-			&p.numotdel, // int
-			&p.tarif,    // int
-			&p.email,
-			&p.phone,
-			&p.address,
-			&p.department,
+			&p.Id, // int
+			&p.Title,
+			&p.Forename,
+			&p.Kadr,
+			&p.Numotdel, // int
+			&p.Tarif,    // int
+			&p.Email,
+			&p.Department,
+			&p.Real,
 		)
 		if err != nil {
 			fmt.Println("ошибка распаковки строки show")
 			panic(err)
 		} // подготовка HTML
-		personalhtml.Id = strconv.Itoa(p.id)
-		personalhtml.Title = p.title
-		personalhtml.Forename = p.forename
-		personalhtml.Kadr = p.kadr
-		personalhtml.Tarif = strconv.Itoa(p.tarif)       // int ---> string
-		personalhtml.Numotdel = strconv.Itoa(p.numotdel) // int ---> string
-		personalhtml.Email = p.email
-		personalhtml.Phone = p.phone
-		personalhtml.Address = p.address
-		personalhtml.Department = p.department
+		personalhtml.Id = strconv.Itoa(p.Id)
+		personalhtml.Title = p.Title
+		personalhtml.Forename = p.Forename
+		personalhtml.Kadr = p.Kadr
+		personalhtml.Tarif = strconv.Itoa(p.Tarif)       // int ---> string
+		personalhtml.Numotdel = strconv.Itoa(p.Numotdel) // int ---> string
+		personalhtml.Email = p.Email
+		personalhtml.Department = p.Department
 		// для sidebar
 		personalhtml.Jetzyahre = mond.Jetzyahre
 		personalhtml.Jetzmonat = mond.Jetzmonat
@@ -278,41 +280,35 @@ func Newhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			personalhtml.Errors = "0"
 			personalhtml.Ready = "0"
 
-			personalhtml.Title = req.Form["title"][0]
+			personalhtml.Title = req.Form["Title"][0]
 			// проверка на пустые поля данных
 			if personalhtml.Title == "" || personalhtml.Title == "???" {
 				personalhtml.Title = "???"
 				personalhtml.Empty = "1"
 				personalhtml.Errors = "1"
 			}
-			personalhtml.Forename = req.Form["forename"][0]
+			personalhtml.Forename = req.Form["Forename"][0]
 			// проверка на пустые поля данных
 			if personalhtml.Forename == "" || personalhtml.Forename == "???" {
 				personalhtml.Forename = "???"
 				personalhtml.Empty = "1"
 				personalhtml.Errors = "1"
 			}
-			personalhtml.Kadr = req.Form["kadr"][0]
+			personalhtml.Kadr = req.Form["Kadr"][0]
 			if personalhtml.Kadr == "" || personalhtml.Kadr == "???" {
 				personalhtml.Kadr = "???"
 				personalhtml.Empty = "1"
 				personalhtml.Errors = "1"
 			}
-			personalhtml.Address = req.Form["address"][0]
-			if personalhtml.Address == "" || personalhtml.Address == "???" {
-				personalhtml.Address = "???"
-				personalhtml.Empty = "1"
-				personalhtml.Errors = "1"
-			}
 			// ввод и проверка на числа
-			personalhtml.Tarif = req.Form["tarif"][0]
+			personalhtml.Tarif = req.Form["Tarif"][0]
 			if servfunc.Checknum(personalhtml.Tarif, 10, 1000) != 0 {
 				personalhtml.Tarif = "???"
 				personalhtml.ErrRange = "1"
 				personalhtml.ErrTarif = "1"
 				personalhtml.Errors = "1"
 			}
-			personalhtml.Numotdel = req.Form["numotdel"][0]
+			personalhtml.Numotdel = req.Form["Numotdel"][0]
 			if servfunc.Checknum(personalhtml.Numotdel, 0, 4) != 0 {
 				personalhtml.Numotdel = "???"
 				personalhtml.ErrRange = "1"
@@ -322,10 +318,10 @@ func Newhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 				department, _ := strconv.Atoi(personalhtml.Numotdel)
 				personalhtml.Department = Department[department]
 			}
-			personalhtml.Email = req.Form["email"][0]
+			personalhtml.Email = req.Form["Email"][0]
 			var errmail int
 			if personalhtml.Email != "" && personalhtml.Email != "???" {
-				errmail, personalhtml.Email, _ = servfunc.InpMailAddress(personalhtml.Title + "<" + personalhtml.Email + ">") // проверка email адреса
+				errmail, personalhtml.Email, _ = servfunc.InpMailAddress(personalhtml.Title + "<" + personalhtml.Email + ">") // проверка Email адреса
 				if errmail > 0 {
 					personalhtml.Email = "???"
 					personalhtml.ErrEmail = "1"
@@ -336,67 +332,109 @@ func Newhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 				personalhtml.ErrEmail = "1"
 				personalhtml.Errors = "1"
 			}
-			row := db.QueryRow("SELECT * FROM personals WHERE email=$6", personalhtml.Email)
-			var p frombase
+			row := db.QueryRow("SELECT * FROM personals WHERE Email=$6", personalhtml.Email)
+			var p Personfrombase
 			err = row.Scan( // чтение строки из таблицы
-				&p.phone,
+				&p.Id,
+				&p.Title,
+				&p.Forename,
+				&p.Kadr,
+				&p.Numotdel, // int
+				&p.Tarif,    // int
+				&p.Email,
+				&p.Department,
+				&p.Real,
 			)
 			if err == nil {
-				fmt.Println("email уже был использован!")
+				fmt.Println("Email уже был использован!")
 				personalhtml.Email = "???"
 				personalhtml.ErrEmail = "2"
 				personalhtml.Errors = "1"
 			}
-			personalhtml.Phone = req.Form["phone"][0]
-			_, err1 := libphonenumber.Parse(personalhtml.Phone, "RU")
-			if err1 != nil {
-				personalhtml.Phone = "???"
-				personalhtml.ErrPhone = "1"
-				personalhtml.Errors = "1"
-			}
+			personalhtml.Real = req.Form["Real"][0]
 
 			if personalhtml.Errors == "0" {
 				personalhtml.Ready = "1"
-				var p frombase
-				p.title = personalhtml.Title //personalhtml.Title
-				p.forename = personalhtml.Forename
-				p.kadr = personalhtml.Kadr
-				p.tarif, _ = strconv.Atoi(personalhtml.Tarif)       // перевод в int для базы
-				p.numotdel, _ = strconv.Atoi(personalhtml.Numotdel) // перевод в int для базы
-				p.email = personalhtml.Email
-				p.phone = personalhtml.Phone
-				p.address = personalhtml.Address
-				p.department = Department[p.numotdel]
-				email := p.email
-				_, err := db.Exec("DELETE FROM personals WHERE email = $1", email) // удаление  записи по считанному email
+				// подготовка записи нового персонала
+				var p Personfrombase
+				p.Title = personalhtml.Title //personalhtml.Title
+				p.Forename = personalhtml.Forename
+				p.Kadr = personalhtml.Kadr
+				p.Tarif, _ = strconv.Atoi(personalhtml.Tarif)       // перевод в int для базы
+				p.Numotdel, _ = strconv.Atoi(personalhtml.Numotdel) // перевод в int для базы
+				p.Email = personalhtml.Email
+				p.Department = Department[p.Numotdel]
+				p.Real, _ = strconv.Atoi(personalhtml.Real)
+				email := p.Email
+				_, err := db.Exec("DELETE FROM personals WHERE Email = $1", email) // удаление  записи по считанному Email
 				if err != nil {
-					fmt.Println("Ошибка при удалении старой записи email=", email)
+					fmt.Println("Ошибка при удалении старой записи Email=", email)
 					panic(err)
 				}
-				sqlStatement := `INSERT INTO personals (title, forename, kadr,numotdel,tarif,email,phone,address,department) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`
-				_, err = db.Exec(sqlStatement,
-					p.title,
-					p.forename,
-					p.kadr,
-					p.numotdel,
-					p.tarif,
-					p.email,
-					p.phone,
-					p.address,
-					p.department,
+				// запись нового персонала
+				sqlStatement1 := `INSERT INTO personals (Title,Forename,Kadr,Numotdel,Tarif,Email,Department,Real)
+ 									VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`
+				_, err = db.Exec(sqlStatement1,
+					p.Title,
+					p.Forename,
+					p.Kadr,
+					p.Numotdel,
+					p.Tarif,
+					p.Email,
+					p.Department,
+					p.Real,
 				)
 				if err != nil {
-					fmt.Println("Ошибка записи измененной строки в personals", "title=", p.title)
+					fmt.Println("Ошибка записи измененной строки в personals", "Title=", p.Title)
 					//panic(err)
 					personalhtml.Errors = "1"
 					personalhtml.ErrEmail = "2"
 					personalhtml.Ready = "0"
 				}
+				// запись нового табеля
+				t := Tabel{}
+
+				if p.Real == 0 {
+					_, err1 := db.Exec("DELETE FROM tabels WHERE Email = $1", email) // удаляем запись табеля по Email
+					if err1 != nil {
+						fmt.Println("Ошибка при удалении записи Email=", email)
+						panic(err1)
+					} else {
+						//t.PersonId = p.Id			// новая запись табеля
+						t.MondId = mond.IdRealMond
+						t.Forename = p.Forename
+						t.Title = p.Title
+						t.Kadr = p.Kadr
+						t.Numotdel = p.Numotdel
+						t.Department = p.Department
+						t.Email = p.Email
+						_, err1 := db.Exec("DELETE FROM tabels WHERE Email = $1", email) // удаление  записи табеля по считанному Email
+						if err1 != nil {
+							fmt.Println("Ошибка при удалении старой записи Email=", email)
+							panic(err1)
+						}
+						// новая запись табеля
+						sqlStatement := `INSERT INTO tabels (Title,Forename,Kadr,Numotdel,Department,MondId,Email) 
+									VALUES ($1,$2,$3,$4,$5,$6,$7)`
+						_, err = db.Exec(sqlStatement,
+							t.Title,
+							t.Forename,
+							t.Kadr,
+							t.Numotdel,
+							t.Department,
+							t.MondId,
+							p.Email,
+						)
+					}
+
+				}
+
 			}
 		}
 		// для sidebar
 		personalhtml.Jetzyahre = mond.Jetzyahre
 		personalhtml.Jetzmonat = mond.Jetzmonat
+
 		err = t.ExecuteTemplate(w, "base", personalhtml)
 		if err != nil {
 			log.Println(err.Error())
@@ -417,21 +455,20 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, "Internal Server ParseFiles Error", http.StatusInternalServerError)
 			return
 		}
-		var p frombase
+		var p Personfrombase
 		idhtml := req.URL.Query().Get("id")
 		id, _ := strconv.Atoi(idhtml)
 		row := db.QueryRow("SELECT * FROM personals WHERE id=$1", id)
 		err = row.Scan( // пересылка  данных строки базы personals в p
-			&p.id,
-			&p.title,
-			&p.forename,
-			&p.kadr,
-			&p.numotdel, // int
-			&p.tarif,    // int
-			&p.email,
-			&p.phone,
-			&p.address,
-			&p.department,
+			&p.Id,
+			&p.Title,
+			&p.Forename,
+			&p.Kadr,
+			&p.Numotdel, // int
+			&p.Tarif,    // int
+			&p.Email,
+			&p.Department,
+			&p.Real,
 		)
 		if err != nil {
 			fmt.Println("edit --> ошибка распаковки строки при чтении записи id=", id)
@@ -440,16 +477,14 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			var personalhtml person
 			makeReadyHtml(&personalhtml) // подготовка флагов для HTML = 0
 			personalhtml.Empty = "1"     // якобы - есть пустые поля для отображения
-			personalhtml.Id = strconv.Itoa(p.id)
-			personalhtml.Title = p.title
-			personalhtml.Forename = p.forename
-			personalhtml.Kadr = p.kadr
-			personalhtml.Tarif = strconv.Itoa(p.tarif)       // int ---> string
-			personalhtml.Numotdel = strconv.Itoa(p.numotdel) // int ---> string
-			personalhtml.Email = p.email
-			personalhtml.Phone = p.phone
-			personalhtml.Address = p.address
-			personalhtml.Department = p.department
+			personalhtml.Id = strconv.Itoa(p.Id)
+			personalhtml.Title = p.Title
+			personalhtml.Forename = p.Forename
+			personalhtml.Kadr = p.Kadr
+			personalhtml.Tarif = strconv.Itoa(p.Tarif)       // int ---> string
+			personalhtml.Numotdel = strconv.Itoa(p.Numotdel) // int ---> string
+			personalhtml.Department = p.Department
+			personalhtml.Real = strconv.Itoa(p.Real)
 			if req.Method == "POST" {
 				req.ParseForm()
 				makeReadyHtml(&personalhtml) // подготовка значений для web
@@ -457,52 +492,47 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 				personalhtml.Errors = "0"
 				personalhtml.Ready = "0"
 
-				personalhtml.Title = req.Form["title"][0]
+				personalhtml.Title = req.Form["Title"][0]
 				// проверка на пустые поля данных
 				if personalhtml.Title == "" || personalhtml.Title == "???" {
 					personalhtml.Title = "???"
 					personalhtml.Empty = "1"
 					personalhtml.Errors = "1"
 				}
-				personalhtml.Forename = req.Form["forename"][0]
+				personalhtml.Forename = req.Form["Forename"][0]
 				// проверка на пустые поля данных
 				if personalhtml.Forename == "" || personalhtml.Forename == "???" {
 					personalhtml.Forename = "???"
 					personalhtml.Empty = "1"
 					personalhtml.Errors = "1"
 				}
-				personalhtml.Kadr = req.Form["kadr"][0]
+				personalhtml.Kadr = req.Form["Kadr"][0]
 				if personalhtml.Kadr == "" || personalhtml.Kadr == "???" {
 					personalhtml.Kadr = "???"
 					personalhtml.Empty = "1"
 					personalhtml.Errors = "1"
 				}
-				personalhtml.Address = req.Form["address"][0]
-				if personalhtml.Address == "" || personalhtml.Address == "???" {
-					personalhtml.Address = "???"
-					personalhtml.Empty = "1"
-					personalhtml.Errors = "1"
-				}
 				// ввод и проверка на числа
-				personalhtml.Tarif = req.Form["tarif"][0]
+				personalhtml.Tarif = req.Form["Tarif"][0]
 				if servfunc.Checknum(personalhtml.Tarif, 10, 1000) != 0 {
 					personalhtml.Tarif = "???"
 					personalhtml.ErrRange = "1"
 					personalhtml.ErrTarif = "1"
 					personalhtml.Errors = "1"
 				}
-				personalhtml.Numotdel = req.Form["numotdel"][0]
+				personalhtml.Numotdel = req.Form["Numotdel"][0]
 				if servfunc.Checknum(personalhtml.Numotdel, 0, 20) != 0 {
 					personalhtml.Numotdel = "???"
 					personalhtml.ErrRange = "1"
 					personalhtml.ErrNumotd = "1"
 					personalhtml.Errors = "1"
 				}
-				personalhtml.Department = req.Form["department"][0]
-				personalhtml.Email = req.Form["email"][0]
+				personalhtml.Department = req.Form["Department"][0]
+				personalhtml.Real = req.Form["Real"][0]
+				personalhtml.Email = req.Form["Email"][0]
 				var errmail int
 				if personalhtml.Email != "" && personalhtml.Email != "???" {
-					errmail, personalhtml.Email, _ = servfunc.InpMailAddress(personalhtml.Title + "<" + personalhtml.Email + ">") // проверка email адреса
+					errmail, personalhtml.Email, _ = servfunc.InpMailAddress(personalhtml.Title + "<" + personalhtml.Email + ">") // проверка Email адреса
 					if errmail > 0 {
 						personalhtml.Email = "???"
 						personalhtml.ErrEmail = "1"
@@ -514,48 +544,38 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 					personalhtml.Errors = "1"
 				}
 
-				personalhtml.Phone = req.Form["phone"][0]
-				_, err1 := libphonenumber.Parse(personalhtml.Phone, "RU")
-				if err1 != nil {
-					personalhtml.Phone = "???"
-					personalhtml.ErrPhone = "1"
-					personalhtml.Errors = "1"
-				}
-
 				if personalhtml.Errors == "0" {
 					personalhtml.Ready = "1"
-					var p frombase
-					p.id, _ = strconv.Atoi(personalhtml.Id)
-					p.title = personalhtml.Title
-					p.forename = personalhtml.Forename
-					p.kadr = personalhtml.Kadr
-					p.tarif, _ = strconv.Atoi(personalhtml.Tarif)       // перевод в int для базы
-					p.numotdel, _ = strconv.Atoi(personalhtml.Numotdel) // перевод в int для базы
-					p.email = personalhtml.Email
-					p.phone = personalhtml.Phone
-					p.address = personalhtml.Address
-					p.department = personalhtml.Department
-					id := p.id
+					var p Personfrombase
+					p.Id, _ = strconv.Atoi(personalhtml.Id)
+					p.Title = personalhtml.Title
+					p.Forename = personalhtml.Forename
+					p.Kadr = personalhtml.Kadr
+					p.Tarif, _ = strconv.Atoi(personalhtml.Tarif)       // перевод в int для базы
+					p.Numotdel, _ = strconv.Atoi(personalhtml.Numotdel) // перевод в int для базы
+					p.Email = personalhtml.Email
+					p.Department = personalhtml.Department
+					p.Real, _ = strconv.Atoi(personalhtml.Real)
+					id := p.Id
 					_, err = db.Exec("DELETE FROM personals WHERE id = $1", id)
 					if err != nil { // удаление старой записи
 						panic(err)
 					}
-					sqlStatement := `INSERT INTO personals (id,title, forename, kadr,numotdel,tarif,email,phone,address,department) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`
+					sqlStatement := `INSERT INTO personals (id,Title, Forename, Kadr,Numotdel,Tarif,Email,Department,Real) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`
 					_, err = db.Exec(sqlStatement,
-						p.id,
-						p.title,
-						p.forename,
-						p.kadr,
-						p.numotdel,
-						p.tarif,
-						p.email,
-						p.phone,
-						p.address,
-						p.department,
+						p.Id,
+						p.Title,
+						p.Forename,
+						p.Kadr,
+						p.Numotdel,
+						p.Tarif,
+						p.Email,
+						p.Department,
+						&p.Real,
 					)
 					//fmt.Println(" запись edit Id=", p.id, p)
 					if err != nil {
-						fmt.Println("Ошибка записи измененной строки в personals", "title=", p.title)
+						fmt.Println("Ошибка записи измененной строки в personals", "Title=", p.Title)
 						panic(err)
 					}
 				}

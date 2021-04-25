@@ -2,11 +2,12 @@
 <strong>
     <table border="1" style="background-color: #b1f3d8">
         <caption>
-            <h3>Табель за {{ .Jetzmonat}} {{ .Jetzyahre}} <br>
+            <h2>Табель за</h2>
+                <h2>{{ .Jetzmonat}}   {{ .Jetzyahre}} <br>
                 Рабочих дней {{ .Tag}} <br>
                 Рабочих часов {{ .Hour}}<br>
                 Отдел
-            </h3>
+            </h2>
         </caption>
         <thead>
         <tr>
@@ -19,20 +20,18 @@
             <th align="center">Отработано часов</th>
             <th align="center">Сверхурочных</th>
             <th align="center">Удалить</th>
-
-
         </thead>
         {{range $key, $value := .Tabelstable}}
         <tr class="<%= cycle('list_line_odd', 'list_line_even') %>">
             <td align="center">{{ 1}}</td>
-            <td><a href= "tabel_show?id={{ $value.Id}}" >{{ $value.Title}}</td>
-            <td>{{ $value.Forename }}</td>
-            <td>{{ $value.Kadr}}</td>
+            <td align="left"><a href= "tabel_show?Id={{ $value.Id}}" >{{ $value.Title}}</td>
+            <td align="left">{{ $value.Forename }}</td>
+            <td align="left">{{ $value.Kadr}}</td>
             <td align="left">{{ $value.Department}}</td>
             <td align="center">{{ $value.Tagemach}}</td>
             <td align="center">{{ $value.Hourmach}}</td>
             <td align="center">{{ $value.Oberhour}}</td>
-            <td><a href= "/monds_index?del=del&id={{ $value.Id}}">Удалить</a></td>
+            <td><a href= "/monds_index?del=del&Id={{ $value.Id}}">Удалить</a></td>
         </tr>
         {{end}}
         </tbody>

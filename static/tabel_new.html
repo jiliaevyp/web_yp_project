@@ -2,7 +2,7 @@
     {{ if eq .Ready "1"}}
     <strong>
     <table border="1" style="background-color: #b1f3d8">
-        <caption><h3>Данные по сотруднику</h3></caption><br>
+        <caption><h3>Табель</h3></caption><br>
         <thead>
         <th> №</th><th>Наименование</th><th>Значение</th>
         </thead>
@@ -17,7 +17,7 @@
         <tr><td>7</td><td>Сверхурочных</td>     <td align="center"> {{ .Oberhour}}</td></tr>
         </tbody>
     </table><br>
-    <button class="button"> <a href= "/personal/personal_edit?title={{.Title}}" >Изменить</a></button>
+    <button class="button"> <a href= "/personal/personal_edit?Title={{.Title}}" >Изменить</a></button>
     </strong>
     {{else}}
         {{ if eq .Errors "1" }}
@@ -35,14 +35,14 @@
             <caption><h3>заполните табель<br>
                     сотрудник месяц </h3></caption><br>
             <tbody>
-            <tr><td>1</td><td>Фамилия</td>      <td align="center"><input name="title" value= {{.Title}} autocomplete="on"></td></tr>
-            <tr><td>2</td><td>Имя</td>          <td align="center"><input name="forename" value= {{.Forename}} autocomplete="on"></td></tr>
-            <tr><td>3</td><td>Должность</td>    <td align="center"><input name="kadr" value= {{.Kadr}}></td></tr>
-            <tr><td>4</td><td>Номер отдела</td> <td align="center"><input type="number" name="numotdel" value= {{.Numotdel}} min="1" max="10" step="1"></td></tr>
-            <tr><td>3</td><td>Тариф</td>        <td align="center"><input type="number" name="tarif" value= {{.Tarif}} min="100" max="500" step="10"></td></tr>
-            <tr><td>5</td><td>Отработано дней</td><td align="center">   <input type="number" name="tagemach" value= {{.Tagemach}} min="1" max="22" step="1"></td></tr>
-            <tr><td>5</td><td>Отработано часов</td><td align="center">  <input type="number" name="hourmach" value= {{.Hourmach}} min="1" max="180" step="1"></td></tr>
-            <tr><td>7</td><td>Сверхурочных</td>     <td align="center"> <input type="number" name="oberhour" value= {{.Oberhour}} min="1" max="60" step="1"></td></tr>
+            <tr><td>1</td><td>Фамилия</td>      <td align="center"><input name="Title" value= {{.Title}} autocomplete="on"></td></tr>
+            <tr><td>2</td><td>Имя</td>          <td align="center"><input name="Forename" value= {{.Forename}} autocomplete="on"></td></tr>
+            <tr><td>3</td><td>Должность</td>    <td align="center"><input name="Kadr" value= {{.Kadr}}></td></tr>
+            <tr><td>4</td><td>Номер отдела</td> <td align="center"><input type="number" name="Numotdel" value= {{.Numotdel}} min="1" max="10" step="1"></td></tr>
+            <tr><td>3</td><td>Тариф</td>        <td align="center"><input type="number" name="Tarif" value= {{.Tarif}} min="100" max="500" step="10"></td></tr>
+            <tr><td>5</td><td>Отработано дней</td><td align="center">   <input type="number" name="Tagemach" value= {{.Tagemach}} min="1" max="22" step="1"></td></tr>
+            <tr><td>5</td><td>Отработано часов</td><td align="center">  <input type="number" name="Hourmach" value= {{.Hourmach}} min="1" max="180" step="1"></td></tr>
+            <tr><td>7</td><td>Сверхурочных</td>     <td align="center"> <input type="number" name="Oberhour" value= {{.Oberhour}} min="1" max="60" step="1"></td></tr>
             </tbody>
         </table><br>
         <button class="submit" align="center"><input type="submit" align="center" value="Ввести"></button>

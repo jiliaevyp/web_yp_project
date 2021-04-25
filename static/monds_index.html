@@ -25,7 +25,7 @@
         <tr class="<%= cycle('list_line_odd', 'list_line_even') %>">
             <td align="center">{{ 1}}</td>
             <td align="center">{{ .Yahre}}</td>
-            <td align="left"><a href= "mond_show?id={{ $value.Id}}" >{{ .Monat}}</td>
+            <td align="left"><a href= "mond_show?Id={{ $value.Id}}" >{{ .Monat}}</td>
             <td align="center">{{ .Tag}}</td>
             <td align="center">{{ .Hour}}</td>
             <td align="center">{{ .Kf}}</td>
@@ -34,7 +34,7 @@
             <td align="center">{{ .Bltabel}}</td>
             <td align="center">{{ .Blbuch}}</td>
             <td align="center">{{ .Blpers}}</td>
-            <td><a href= "/monds_index?del=del&id={{ $value.Id}}">Удалить</a></td>
+            <td><a href= "/monds_index?del=del&Id={{ $value.Id}}">Удалить</a></td>
         </tr>
         {{end}}
         </tbody>

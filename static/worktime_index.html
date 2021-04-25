@@ -22,7 +22,7 @@
         {{ range $key, $value := .Personalstab }}
         <tr class="<%= cycle('list_line_odd', 'list_line_even') %>">
             <td>{{ 1}}</td>
-            <td><a href= "personal_show?title={{ $value.Title}}" >{{ $value.Title}}</td>
+            <td><a href= "personal_show?Title={{ $value.Title}}" >{{ $value.Title}}</td>
             <td>{{ $value.Forename }}</td>
             <td>{{ $value.Kadr}}</td>
             <td>{{ $value.Tarif}}</td>
@@ -30,7 +30,7 @@
             <td>{{ $value.Email}}</td>
             <td>{{ $value.Phone}}</td>
             <td>{{ $value.Address}}</td>
-            <td><a href= "/personals_index?del=del&title={{ $value.Title}}">Удалить</a></td>
+            <td><a href= "/personals_index?del=del&Title={{ $value.Title}}">Удалить</a></td>
         </tr>
         {{end}}
         </tbody>

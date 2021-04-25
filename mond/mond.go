@@ -74,18 +74,18 @@ type Monat struct { // данные по месяцу при вводе и от�
 }
 
 type Mondfrombase struct { // для чтения из таблицы monds
-	id       int
-	yahre    int
-	nummonat int
-	tag      int
-	hour     int
-	kf       int
-	blmond   int
-	bltime   int
-	bltabel  int
-	blbuch   int
-	blpers   int
-	monat    string
+	Id       int
+	Yahre    int
+	Nummonat int
+	Tag      int
+	Hour     int
+	Kf       int
+	Blmond   int
+	Bltime   int
+	Bltabel  int
+	Blbuch   int
+	Blpers   int
+	Monat    string
 }
 
 //============================================================================
@@ -152,28 +152,28 @@ func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			} else {
 				row := db.QueryRow("SELECT * FROM monds WHERE id=$1", IdRealMond)
 				err = row.Scan( // чтение строки из таблицы
-					&p.id,
-					&p.yahre,
-					&p.nummonat,
-					&p.tag,
-					&p.hour,
-					&p.kf,
-					&p.blmond,
-					&p.bltime,
-					&p.bltabel,
-					&p.blbuch,
-					&p.blpers,
-					&p.monat,
+					&p.Id,
+					&p.Yahre,
+					&p.Nummonat,
+					&p.Tag,
+					&p.Hour,
+					&p.Kf,
+					&p.Blmond,
+					&p.Bltime,
+					&p.Bltabel,
+					&p.Blbuch,
+					&p.Blpers,
+					&p.Monat,
 				)
 				if err != nil {
 					fmt.Println("ошибка распаковки строки IdRealMond")
 					panic(err)
 				} else {
-					mondtable.IdRealMond = strconv.Itoa(p.id)
-					mondtable.Jetzyahre = strconv.Itoa(p.yahre)
-					mondtable.Jetzmonat = p.monat
+					mondtable.IdRealMond = strconv.Itoa(p.Id)
+					mondtable.Jetzyahre = strconv.Itoa(p.Yahre)
+					mondtable.Jetzmonat = p.Monat
 
-					IdRealMond = p.id // глобальная id для модулей personals tabels
+					IdRealMond = p.Id // глобальная id для модулей personals tabels
 					Jetzyahre = mondtable.Jetzyahre
 					Jetzmonat = mondtable.Jetzmonat
 				}
@@ -182,39 +182,41 @@ func Indexhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 		defer rows.Close()
 		for rows.Next() {
 			err = rows.Scan( // пересылка  данных строки базы personals в "p"
-				&p.id,
-				&p.yahre,
-				&p.nummonat,
-				&p.tag,
-				&p.hour,
-				&p.kf,
-				&p.blmond,
-				&p.bltime,
-				&p.bltabel,
-				&p.blbuch,
-				&p.blpers,
-				&p.monat,
+				&p.Id,
+				&p.Yahre,
+				&p.Nummonat,
+				&p.Tag,
+				&p.Hour,
+				&p.Kf,
+				&p.Blmond,
+				&p.Bltime,
+				&p.Bltabel,
+				&p.Blbuch,
+				&p.Blpers,
+				&p.Monat,
 			)
 			if err != nil {
 				fmt.Println("index monds ошибка распаковки строки ")
 				panic(err)
 				return
 			}
-			var monatlhtml Monat
-			monatlhtml.Id = strconv.Itoa(p.id)
-			monatlhtml.Yahre = strconv.Itoa(p.yahre)
-			monatlhtml.Nummonat = strconv.Itoa(p.nummonat)
-			monatlhtml.Monat = p.monat
-			monatlhtml.Tag = strconv.Itoa(p.tag)
-			monatlhtml.Hour = strconv.Itoa(p.hour) // int ---> string for HTML
-			monatlhtml.Kf = strconv.Itoa(p.kf)
-			monatlhtml.Blmond = strconv.Itoa(p.blmond)
-			monatlhtml.Bltime = strconv.Itoa(p.bltime)
-			monatlhtml.Bltabel = strconv.Itoa(p.bltabel)
-			monatlhtml.Blbuch = strconv.Itoa(p.blbuch)
-			monatlhtml.Blpers = strconv.Itoa(p.blpers)
+			var monathtml Monat
+			monathtml.Id = strconv.Itoa(p.Id)
+			monathtml.Ready = "0" // "1" - ввод корректен
+			monathtml.Id = strconv.Itoa(p.Id)
+			monathtml.Yahre = strconv.Itoa(p.Yahre)
+			monathtml.Nummonat = strconv.Itoa(p.Nummonat)
+			monathtml.Monat = p.Monat
+			monathtml.Tag = strconv.Itoa(p.Tag)
+			monathtml.Hour = strconv.Itoa(p.Hour)
+			monathtml.Kf = strconv.Itoa(p.Kf)
+			monathtml.Blmond = strconv.Itoa(p.Blmond)
+			monathtml.Bltime = strconv.Itoa(p.Bltime)
+			monathtml.Bltabel = strconv.Itoa(p.Bltabel)
+			monathtml.Blbuch = strconv.Itoa(p.Blbuch)
+			monathtml.Blpers = strconv.Itoa(p.Blpers)
 			// добавление строки в таблицу Personalstab для personals_index.html
-			mondtable.Mondstable = append(mondtable.Mondstable, monatlhtml)
+			mondtable.Mondstable = append(mondtable.Mondstable, monathtml)
 		}
 		mondtable.Ready = "1"
 		mondtable.Jetzyahre = Jetzyahre
@@ -240,48 +242,49 @@ func Showhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			http.Error(w, "Internal Server ParseFiles Error", http.StatusInternalServerError)
 			return
 		}
-		var monathtml Monat
-		monathtml.Ready = "0" // 1 - ввод успешный
-		idhtml := req.URL.Query().Get("id")
+		// отработка key = "id"
+		idhtml := req.URL.Query().Get("Id")
 		id, _ := strconv.Atoi(idhtml)
+		fmt.Println("id=", id)
 		row := db.QueryRow("SELECT * FROM monds WHERE id=$1", id)
 		var p Mondfrombase
 		err = row.Scan( // чтение строки из таблицы
-			&p.id,
-			&p.yahre,
-			&p.nummonat,
-			&p.tag,
-			&p.hour,
-			&p.kf,
-			&p.blmond,
-			&p.bltime,
-			&p.bltabel,
-			&p.blbuch,
-			&p.blpers,
-			&p.monat,
+			&p.Id,
+			&p.Yahre,
+			&p.Nummonat,
+			&p.Tag,
+			&p.Hour,
+			&p.Kf,
+			&p.Blmond,
+			&p.Bltime,
+			&p.Bltabel,
+			&p.Blbuch,
+			&p.Blpers,
+			&p.Monat,
 		)
 		if err != nil {
 			fmt.Println("ошибка распаковки строки show")
 			panic(err)
 		}
+		var monathtml Monat
+		monathtml.Ready = "0" // 1 - ввод успешный
 		// подготовка HTML
-		var monatlhtml Monat
-		monatlhtml.Id = strconv.Itoa(p.id)
-		monatlhtml.Yahre = strconv.Itoa(p.yahre)
-		monatlhtml.Nummonat = strconv.Itoa(p.nummonat)
-		monatlhtml.Monat = p.monat
-		monatlhtml.Tag = strconv.Itoa(p.tag)
-		monatlhtml.Hour = strconv.Itoa(p.hour)
-		monatlhtml.Kf = strconv.Itoa(p.kf)
-		monatlhtml.Blmond = strconv.Itoa(p.blmond)
-		monatlhtml.Bltime = strconv.Itoa(p.bltime)
-		monatlhtml.Bltabel = strconv.Itoa(p.bltabel)
-		monatlhtml.Blbuch = strconv.Itoa(p.blbuch)
-		monatlhtml.Blpers = strconv.Itoa(p.blpers)
+		monathtml.Id = strconv.Itoa(p.Id)
+		monathtml.Yahre = strconv.Itoa(p.Yahre)
+		monathtml.Nummonat = strconv.Itoa(p.Nummonat)
+		monathtml.Monat = p.Monat
+		monathtml.Tag = strconv.Itoa(p.Tag)
+		monathtml.Hour = strconv.Itoa(p.Hour)
+		monathtml.Kf = strconv.Itoa(p.Kf)
+		monathtml.Blmond = strconv.Itoa(p.Blmond)
+		monathtml.Bltime = strconv.Itoa(p.Bltime)
+		monathtml.Bltabel = strconv.Itoa(p.Bltabel)
+		monathtml.Blbuch = strconv.Itoa(p.Blbuch)
+		monathtml.Blpers = strconv.Itoa(p.Blpers)
 
 		monathtml.Jetzmonat = Jetzmonat
 		monathtml.Jetzyahre = Jetzyahre
-		err = t.ExecuteTemplate(w, "base", monatlhtml)
+		err = t.ExecuteTemplate(w, "base", monathtml)
 		if err != nil {
 			log.Println(err.Error())
 			http.Error(w, "Internal Server Execute Error Showhandler", http.StatusInternalServerError)
@@ -319,18 +322,18 @@ func Newhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			monathtml.Blpers = req.Form["blpers"][0]
 			// перевод в int для базы
 			var p Mondfrombase
-			p.yahre, _ = strconv.Atoi(monathtml.Yahre)
-			p.nummonat, _ = strconv.Atoi(monathtml.Nummonat)
-			p.monat = monathtml.Monat //monatArray[p.nummonat-1]
-			p.tag, _ = strconv.Atoi(monathtml.Tag)
-			p.hour, _ = strconv.Atoi(monathtml.Hour)
-			p.kf, _ = strconv.Atoi(monathtml.Kf)
-			p.blmond, _ = strconv.Atoi(monathtml.Blmond)
-			p.bltime, _ = strconv.Atoi(monathtml.Bltime)
-			p.bltabel, _ = strconv.Atoi(monathtml.Bltabel)
-			p.blbuch, _ = strconv.Atoi(monathtml.Blbuch)
-			p.blpers, _ = strconv.Atoi(monathtml.Blpers)
-			nummonat := p.nummonat
+			p.Yahre, _ = strconv.Atoi(monathtml.Yahre)
+			p.Nummonat, _ = strconv.Atoi(monathtml.Nummonat)
+			p.Monat = monathtml.Monat //monatArray[p.nummonat-1]
+			p.Tag, _ = strconv.Atoi(monathtml.Tag)
+			p.Hour, _ = strconv.Atoi(monathtml.Hour)
+			p.Kf, _ = strconv.Atoi(monathtml.Kf)
+			p.Blmond, _ = strconv.Atoi(monathtml.Blmond)
+			p.Bltime, _ = strconv.Atoi(monathtml.Bltime)
+			p.Bltabel, _ = strconv.Atoi(monathtml.Bltabel)
+			p.Blbuch, _ = strconv.Atoi(monathtml.Blbuch)
+			p.Blpers, _ = strconv.Atoi(monathtml.Blpers)
+			nummonat := p.Nummonat
 			_, err1 := db.Exec("DELETE FROM monds WHERE nummonat = $1", nummonat)
 			if err1 != nil {
 				fmt.Println("Ошибка при удалении старой записи в monds nummonat = ", nummonat)
@@ -338,17 +341,17 @@ func Newhandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 			}
 			sqlStatement := `INSERT INTO monds (yahre,nummonat,tag,hour,kf,blmond,bltime,bltabel,blbuch,blpers,Monat) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`
 			_, err2 := db.Exec(sqlStatement,
-				&p.yahre,
-				&p.nummonat,
-				&p.tag,
-				&p.hour,
-				&p.kf,
-				&p.blmond,
-				&p.bltime,
-				&p.bltabel,
-				&p.blbuch,
-				&p.blpers,
-				&p.monat,
+				&p.Yahre,
+				&p.Nummonat,
+				&p.Tag,
+				&p.Hour,
+				&p.Kf,
+				&p.Blmond,
+				&p.Bltime,
+				&p.Bltabel,
+				&p.Blbuch,
+				&p.Blpers,
+				&p.Monat,
 			)
 			if err2 != nil {
 				fmt.Println("Ошибка записи новой строки в mondNew")
@@ -387,35 +390,35 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 		// выборка записи из таблицы
 		var p Mondfrombase
 		err = row.Scan(
-			&p.id,
-			&p.yahre,
-			&p.nummonat,
-			&p.tag,
-			&p.hour,
-			&p.kf,
-			&p.blmond,
-			&p.bltime,
-			&p.bltabel,
-			&p.blbuch,
-			&p.blpers,
-			&p.monat,
+			&p.Id,
+			&p.Yahre,
+			&p.Nummonat,
+			&p.Tag,
+			&p.Hour,
+			&p.Kf,
+			&p.Blmond,
+			&p.Bltime,
+			&p.Bltabel,
+			&p.Blbuch,
+			&p.Blpers,
+			&p.Monat,
 		)
 		if err == nil {
 			// подготовка HTML
 			var monathtml Monat
 			monathtml.Ready = "0" // "1" - ввод корректен
-			monathtml.Id = strconv.Itoa(p.id)
-			monathtml.Yahre = strconv.Itoa(p.yahre)
-			monathtml.Nummonat = strconv.Itoa(p.nummonat)
-			monathtml.Monat = p.monat //string
-			monathtml.Tag = strconv.Itoa(p.tag)
-			monathtml.Hour = strconv.Itoa(p.hour) // int ---> string for HTML
-			monathtml.Kf = strconv.Itoa(p.kf)
-			monathtml.Blmond = strconv.Itoa(p.blmond)
-			monathtml.Bltime = strconv.Itoa(p.bltime)
-			monathtml.Bltabel = strconv.Itoa(p.bltabel)
-			monathtml.Blbuch = strconv.Itoa(p.blbuch)
-			monathtml.Blpers = strconv.Itoa(p.blpers)
+			monathtml.Id = strconv.Itoa(p.Id)
+			monathtml.Yahre = strconv.Itoa(p.Yahre)
+			monathtml.Nummonat = strconv.Itoa(p.Nummonat)
+			monathtml.Monat = p.Monat
+			monathtml.Tag = strconv.Itoa(p.Tag)
+			monathtml.Hour = strconv.Itoa(p.Hour)
+			monathtml.Kf = strconv.Itoa(p.Kf)
+			monathtml.Blmond = strconv.Itoa(p.Blmond)
+			monathtml.Bltime = strconv.Itoa(p.Bltime)
+			monathtml.Bltabel = strconv.Itoa(p.Bltabel)
+			monathtml.Blbuch = strconv.Itoa(p.Blbuch)
+			monathtml.Blpers = strconv.Itoa(p.Blpers)
 
 			if req.Method == "POST" {
 				req.ParseForm()
@@ -433,18 +436,19 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 				monathtml.Blpers = req.Form["blpers"][0]
 				// перевод в int для базы
 				var p Mondfrombase
-				p.id, _ = strconv.Atoi(monathtml.Id)
-				p.yahre, _ = strconv.Atoi(monathtml.Yahre)
-				p.nummonat, _ = strconv.Atoi(monathtml.Nummonat)
-				p.monat = monathtml.Monat
-				p.tag, _ = strconv.Atoi(monathtml.Tag)
-				p.hour, _ = strconv.Atoi(monathtml.Hour)
-				p.kf, _ = strconv.Atoi(monathtml.Kf)
-				p.blmond, _ = strconv.Atoi(monathtml.Blmond)
-				p.bltime, _ = strconv.Atoi(monathtml.Bltime)
-				p.bltabel, _ = strconv.Atoi(monathtml.Bltabel)
-				p.blbuch, _ = strconv.Atoi(monathtml.Blbuch)
-				p.blpers, _ = strconv.Atoi(monathtml.Blpers)
+				p.Id, _ = strconv.Atoi(monathtml.Id)
+				p.Yahre, _ = strconv.Atoi(monathtml.Yahre)
+				p.Nummonat, _ = strconv.Atoi(monathtml.Nummonat)
+				p.Monat = monathtml.Monat //monatArray[p.nummonat-1]
+				p.Tag, _ = strconv.Atoi(monathtml.Tag)
+				p.Hour, _ = strconv.Atoi(monathtml.Hour)
+				p.Kf, _ = strconv.Atoi(monathtml.Kf)
+				p.Blmond, _ = strconv.Atoi(monathtml.Blmond)
+				p.Bltime, _ = strconv.Atoi(monathtml.Bltime)
+				p.Bltabel, _ = strconv.Atoi(monathtml.Bltabel)
+				p.Blbuch, _ = strconv.Atoi(monathtml.Blbuch)
+				p.Blpers, _ = strconv.Atoi(monathtml.Blpers)
+				//nummonat := p.Nummonat
 
 				//_, err1 := db.Exec("DELETE FROM monds WHERE id = $1", id)
 				//if err1 != nil {
@@ -453,18 +457,18 @@ func Edithandler(db *sql.DB) func(w http.ResponseWriter, req *http.Request) {
 				//}
 				sqlStatement := `INSERT INTO monds (id,yahre,nummonat,tag,hour,kf,blmond,bltime,bltabel,blbuch,blpers,Monat) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`
 				_, err2 := db.Exec(sqlStatement,
-					&p.id,
-					&p.yahre,
-					&p.nummonat,
-					&p.tag,
-					&p.hour,
-					&p.kf,
-					&p.blmond,
-					&p.bltime,
-					&p.bltabel,
-					&p.blbuch,
-					&p.blpers,
-					&p.monat,
+					&p.Id,
+					&p.Yahre,
+					&p.Nummonat,
+					&p.Tag,
+					&p.Hour,
+					&p.Kf,
+					&p.Blmond,
+					&p.Bltime,
+					&p.Bltabel,
+					&p.Blbuch,
+					&p.Blpers,
+					&p.Monat,
 				)
 				if err2 != nil {
 					fmt.Println("Ошибка записи edit строки в mondNew")

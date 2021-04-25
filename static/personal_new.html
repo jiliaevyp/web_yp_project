@@ -11,13 +11,12 @@
         <tr><td>2</td><td>Имя</td>       <td align="center"> {{.Forename}}   </td></tr>
         <tr><td>3</td><td>Должность</td> <td align="center"> {{.Kadr}}   </td></tr>
         <tr><td>4</td><td>Отдел</td>     <td align="center"> {{.Department}}  </td></tr>
+        <tr><td>4</td><td>В табель</td>     <td align="center"> {{ if eq .Real "1"}} Включен {{else}} не включен {{end}} </td></tr>
         <tr><td>3</td><td>Тариф</td>     <td align="center"> {{.Tarif}}   </td></tr>
         <tr><td>5</td><td>Е-майл</td>    <td align="center"> {{.Email}}  </td></tr>
-        <tr><td>6</td><td>Телефон</td>   <td align="center"> {{.Phone}}  </td></tr>
-        <tr><td>7</td><td>Адрес</td>     <td align="center"> {{.Address}}</td></tr>
         </tbody>
     </table><br>
-        <button class="button"> <a href= "/personal_edit?id={{.Id}}" >Изменить</a></button>
+        <button class="button"> <a href= "/personal_edit?Id={{.Id}}" >Изменить</a></button>
     </strong>
     {{else}}
         {{ if eq .Empty "1" }}
@@ -30,9 +29,6 @@
                 {{end}}
                 {{ if eq .ErrEmail "2" }}
                 Электронная почта уже использована! <br>
-                {{end}}
-                {{ if eq .ErrPhone "1" }}
-                Телефонный номер некорректен! <br>
                 {{end}}
                 {{ if eq .ErrRange "1" }}
                 Тариф некорректен! <br>
@@ -50,9 +46,9 @@
             <th> №</th><th>Наименование</th><th>Значение</th>
             </thead>
             <tbody>
-            <tr><td>1</td><td>Фамилия</td>      <td align="center"><input name="title" autocomplete="on"></td></tr>
-            <tr><td>2</td><td>Имя</td>          <td align="center"><input name="forename" autocomplete="on"></td></tr>
-            <tr><td>3</td><td>Должность</td>    <td align="center"><select size="1" name="kadr" required >
+            <tr><td>1</td><td>Фамилия</td>      <td align="center"><input name="Title" autocomplete="on"></td></tr>
+            <tr><td>2</td><td>Имя</td>          <td align="center"><input name="Forename" autocomplete="on"></td></tr>
+            <tr><td>3</td><td>Должность</td>    <td align="center"><select size="1" name="Kadr" required >
                 <option value={{.Kadr}}>{{.Kadr}}</option>
                 <option value="Инженер">Инженер</option>
                 <option value="Менеджер">Менеджер</option>
@@ -60,11 +56,14 @@
                 <option value="Зам.директора">Зам.директора</option>
                 <option value="Директор">Директор</option>
             </select></p>
-            <tr><td>4</td><td>Номер отдела</td> <td align="center"><input type="number" name="numotdel" value= {{.Numotdel}} min="1" max="10" step="1"></td></tr>
-            <tr><td>3</td><td>Тариф</td>        <td align="center"><input type="number" name="tarif" value= {{.Tarif}} min="100" max="500" step="10"></td></tr>
-            <tr><td>5</td><td>Е-майл</td>       <td align="center"><input type="email" name="email" autocomplete="on"></td></tr>
-            <tr><td>6</td><td>Телефон</td>      <td align="center"><input type="phone" name="phone" autocomplete="on"></td></tr>
-            <tr><td>7</td><td>Адрес</td>        <td align="center"><input name="address" autocomplete="on"></td></tr>
+            <tr><td>4</td><td>Номер отдела</td> <td align="center"><input type="number" name="Numotdel" value= {{.Numotdel}} min="1" max="10" step="1"></td></tr>
+            <tr><td>4</td><td>Включить в табель</td> <td align="center"><select size="1" name="Real" required >
+                <option value={{.Real}}>{{.Real}}</option>
+                <option value="1">Включить</option>
+                <option value="0">Не включать</option>
+            </select></p>
+            <tr><td>3</td><td>Тариф</td>        <td align="center"><input type="number" name="Tarif" value= {{.Tarif}} min="100" max="500" step="10"></td></tr>
+            <tr><td>5</td><td>Е-майл</td>       <td align="center"><input type="Email" name="Email" autocomplete="on"></td></tr>
             </tbody>
         </table><br>
         <button class="submit" align="center"><input type="submit"  align="center" value="Ввести"></button>

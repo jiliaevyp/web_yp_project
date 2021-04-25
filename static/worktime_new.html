@@ -17,7 +17,7 @@
         <tr><td>7</td><td>Адрес</td>     <td align="center"> {{.Address}}</td></tr>
         </tbody>
     </table><br>
-    <button class="button"> <a href= "/personal/personal_edit?title={{.Title}}" >Изменить</a></button>
+    <button class="button"> <a href= "/personal/personal_edit?Title={{.Title}}" >Изменить</a></button>
 </strong>
 {{else}}
 {{ if eq .Empty "1" }}
@@ -44,14 +44,14 @@
             <th> №</th><th>Наименование</th><th>Значение</th>
             </thead>
             <tbody>
-            <tr><td>1</td><td>Имя</td>       <td align="center"><input forename="forename"></td></tr>
-            <tr><td>2</td><td>Фамилия</td>   <td align="center"><input forename="title"></td></tr>
-            <tr><td>3</td><td>Должность</td> <td align="center"><input forename="kadr"></td></tr>
-            <tr><td>3</td><td>Тариф</td>     <td align="center"><input forename="tarif"></td></tr>
-            <tr><td>4</td><td>Отдел</td>     <td align="center"><input forename="otdel"></td></tr>
-            <tr><td>5</td><td>Е-майл</td>    <td align="center"><input forename="email"></td></tr>
-            <tr><td>6</td><td>Телефон</td>   <td align="center"><input forename="phone"></td></tr>
-            <tr><td>7</td><td>Адрес</td>     <td align="center"><input forename="address"></td></tr>
+            <tr><td>1</td><td>Имя</td>       <td align="center"><input Forename="Forename"></td></tr>
+            <tr><td>2</td><td>Фамилия</td>   <td align="center"><input Forename="Title"></td></tr>
+            <tr><td>3</td><td>Должность</td> <td align="center"><input Forename="Kadr"></td></tr>
+            <tr><td>3</td><td>Тариф</td>     <td align="center"><input Forename="Tarif"></td></tr>
+            <tr><td>4</td><td>Отдел</td>     <td align="center"><input Forename="otdel"></td></tr>
+            <tr><td>5</td><td>Е-майл</td>    <td align="center"><input Forename="Email"></td></tr>
+            <tr><td>6</td><td>Телефон</td>   <td align="center"><input Forename="Phone"></td></tr>
+            <tr><td>7</td><td>Адрес</td>     <td align="center"><input Forename="Address"></td></tr>
             </tbody>
         </table><br>
         <button class="submit" align="center"><input type="submit" align="center" value="Ввести"></button>

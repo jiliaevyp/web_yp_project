@@ -10,14 +10,13 @@
         <tr><td>1</td><td>Имя</td>          <td align="center"> {{.Forename}}   </td></tr>
         <tr><td>3</td><td>Должность</td>    <td align="center"> {{.Kadr}}   </td></tr>
         <tr><td>4</td><td>Отдел</td>        <td align="center"> {{.Department}}  </td></tr>
+        <tr><td>4</td><td>В табель</td>     <td align="center"> {{ if eq .Real "1"}} Включен {{else}} не включен {{end}} </td></tr>
         <tr><td>3</td><td>Тариф</td>        <td align="center"> {{.Tarif}}   </td></tr>
-        <tr><td>5</td><td>Е-майл</td>       <td align="center"> {{.Email}}  </td></tr>
-        <tr><td>6</td><td>Телефон</td>      <td align="center"> {{.Phone}}  </td></tr>
         <tr><td>7</td><td>Адрес</td>        <td align="center"> {{.Address}}</td></tr>
         </tbody>
     </table><br>
     </strong>
-    <button class="button"> <a href= "/personal_edit?id={{.Id}}" >Изменить</a></button>
+    <button class="button"> <a href= "/personal_edit?Id={{.Id}}" >Изменить</a></button>
     <button class="button"> <a href= "/personals_index" >Выход</a></button>
 
 {{end}}

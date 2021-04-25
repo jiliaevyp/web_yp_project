@@ -1,13 +1,17 @@
 {{ define "content" }}
 <strong>
     <table border="1" style="background-color: #b1f3d8">
-        <caption><h3>Данные по сотруднику</h3></caption><br>
+        <h2>Табель сотрудника </h2>
+        {{ .Title}} {{ .Forename}}
+        <h2> За {{ .Jetzmonat}}   {{ .Jetzyahre}} <br>
+            Рабочих дней {{ .Tag}} <br>
+            Рабочих часов {{ .Hour}}<br>
+        </h2>
+
         <thead>
         <th> №</th><th>Наименование</th><th>Значение</th>
         </thead>
         <tbody>
-        <tr><td>2</td><td>Фамилия</td>   <td align="center"> {{ .Title}} </td></tr>
-        <tr><td>1</td><td>Имя</td>       <td align="center"> {{ .Forename}}   </td></tr>
         <tr><td>3</td><td>Должность</td> <td align="center"> {{ .Kadr}} </td></tr>
         <tr><td>4</td><td>Отдел</td>     <td align="center"> {{ .Department}}  </td></tr>
         <tr><td>5</td><td>Отработано дней</td>    <td align="center"> {{ .Tagemach}}  </td></tr>
@@ -16,7 +20,7 @@
         </tbody>
     </table><br>
 </strong>
-<button class="button"> <a href= "/tabel_edit?id={{ .Id}}" >Изменить</a></button>
+<button class="button"> <a href= "/tabel_edit?Id={{ .Id}}" >Изменить</a></button>
 <button class="button"> <a href= "/tabels_index" >Выход</a></button>
 
 {{end}}

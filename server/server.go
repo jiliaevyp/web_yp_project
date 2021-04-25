@@ -112,6 +112,7 @@ func Server(addrWeb string, db *sql.DB) {
 	//http.Handle("/worktime_show", http.HandlerFunc(ShowHandler(db)))
 	//http.Handle("/worktime_edit", http.HandlerFunc(EditHandler(db)))
 	//
+
 	http.Handle("/tabels_index", http.HandlerFunc(tabel.IndexHandler(db)))
 	http.Handle("/tabel_new", http.HandlerFunc(tabel.NewHandler(db)))
 	http.Handle("/tabel_show", http.HandlerFunc(tabel.ShowHandler(db)))
